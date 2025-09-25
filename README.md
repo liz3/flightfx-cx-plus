@@ -10,4 +10,4 @@ This is a enhancement package for the FlightFX Citation X in MSFS2020/MSFS2024.
 **NOTE:** Settings for Hoppie are on NAV > ACARS > SETINGS.
 
 # Download
-Download [Latest Community Package](/releases/latest)
+Download [Latest Community Package](https://github.com/liz3/flightfx-cx-plus/releases)

@@ -1,0 +1,20 @@
+{
+  "name": "flightfx-cx-plugin",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "esbuild": "^0.25.10"
+  },
+  "dependencies": {
+    "@microsoft/msfs-sdk": "^2.2.3",
+    "@microsoft/msfs-wt21-fmc": "^3.2.3",
+    "@microsoft/msfs-wt21-shared": "^3.2.3"
+  }
+}

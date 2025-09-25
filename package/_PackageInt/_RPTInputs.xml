@@ -1,0 +1,53 @@
+<RPTInputs>
+	<RPTInput Path="D:\Projects\flightfx-cx-plugin\package\PackageSources\Copys\flightfx-cx-plugin\web-ui\Pages\Vcockpit\instruments\vtx21\fmc\plugins\hook.js">
+		<Package Name="liz3-flightfx-cx-plugin">
+			<AssetGroup Name="web-ui"/>
+			<AssetGroup Name="web-ui"/>
+		</Package>
+	</RPTInput>
+	<RPTInput Path="D:\Projects\flightfx-cx-plugin\package\PackageSources\Copys\flightfx-cx-plugin\web-ui\Pages\Vcockpit\instruments\vtx21\fmc\plugins\flightfx-cx-plus.js">
+		<Package Name="liz3-flightfx-cx-plugin">
+			<AssetGroup Name="web-ui"/>
+			<AssetGroup Name="web-ui"/>
+		</Package>
+	</RPTInput>
+	<RPTInput Path="D:\Projects\CitationCJ4Plus\citation-cj4-plus\PackageSources\Copys\citation-cj4-plus\module\CitationCj4PlusModul.wasm">
+		<Package Name="liz3-citation-cj4-plus">
+			<AssetGroup Name="module"/>
+		</Package>
+	</RPTInput>
+	<RPTInput Path="D:\Projects\CitationCJ4Plus\citation-cj4-plus\PackageSources\Copys\citation-cj4-plus\avionics-plugin\Plugins\liz3-citation-cj4-plus.xml">
+		<Package Name="liz3-citation-cj4-plus">
+			<AssetGroup Name="avionics-plugin"/>
+		</Package>
+	</RPTInput>
+	<RPTInput Path="D:\Projects\CitationCJ4Plus\citation-cj4-plus\PackageSources\Copys\citation-cj4-plus\avionics-plugin\liz3-citation-cj4-plugin\plugin.js">
+		<Package Name="liz3-citation-cj4-plus">
+			<AssetGroup Name="avionics-plugin"/>
+		</Package>
+	</RPTInput>
+	<RPTInput Path="D:\Projects\flightfx-cx-plugin\package\PackageDefinitions\liz3-flightfx-cx-plugin\ContentInfo\Thumbnail.jpg">
+		<Package Name="liz3-flightfx-cx-plugin">
+			<AssetGroup Name="ContentInfo"/>
+			<AssetGroup Name="ContentInfo"/>
+		</Package>
+	</RPTInput>
+	<RPTInput Path="D:\Projects\flightfx-cx-plugin\package\PackageSources\Copys\flightfx-cx-plugin\web-ui\Pages\Vcockpit\instruments\vtx21\eicas\eicas.js">
+		<Package Name="liz3-flightfx-cx-plugin">
+			<AssetGroup Name="web-ui"/>
+			<AssetGroup Name="web-ui"/>
+		</Package>
+	</RPTInput>
+	<RPTInput Path="D:\Projects\CitationCJ4Plus\citation-cj4-plus\PackageDefinitions\liz3-citation-cj4-plus\ContentInfo\Thumbnail.jpg">
+		<Package Name="liz3-citation-cj4-plus">
+			<AssetGroup Name="ContentInfo"/>
+		</Package>
+	</RPTInput>
+	<RPTInput Path="D:\Projects\flightfx-cx-plugin\package\PackageSources\Copys\flightfx-cx-plugin\web-ui\Pages\Vcockpit\instruments\vtx21\fmc\wt21_fmc.html">
+		<Package Name="liz3-flightfx-cx-plugin">
+			<AssetGroup Name="web-ui"/>
+			<AssetGroup Name="web-ui"/>
+		</Package>
+	</RPTInput>
+</RPTInputs>
+

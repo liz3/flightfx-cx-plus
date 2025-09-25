@@ -16,13 +16,11 @@ import { convertUnixToHHMM } from "./Hoppie.mjs";
 import { fetchAcarsMessages, fetchAcarsStatus } from "./AcarsService.mjs";
 const RawFormatter = {
   nullValueString: "",
-  /** @inheritDoc */
   format(value) {
     return value !== null && value !== void 0 ? value : "";
   },
 };
 class PageParamLinkField extends DisplayField {
-  /** @inheritDoc */
   constructor(page, options) {
     var _a;
     const opts = {
@@ -42,14 +40,6 @@ class PageParamLinkField extends DisplayField {
     this.params = options.params;
     this.takeValue(options.label);
   }
-  /**
-   * Creates an {@link PageLinkField}
-   * @param page    the parent {@link FmcPage}
-   * @param label  the label to display
-   * @param route the route to navigate to (will disable link when empty)
-   * @param disabled whether the link is disabled
-   * @returns the {@link PageLinkField}
-   */
   static createLink(page, params, label, route, disabled = false) {
     if (route === "") {
       disabled = true;
@@ -240,6 +230,7 @@ export class DatalinkMessagePage extends WT21FmcPage {
     super(...arguments);
     this.msgOpts = [];
     this.bus = this.eventBus;
+    this.optionSubjects = [];
     this.updateHandler = this.bus
       .getSubscriber()
       .on("acars_message_state_update")
@@ -247,12 +238,44 @@ export class DatalinkMessagePage extends WT21FmcPage {
         const message = this.router.params["message"];
         if (message && e.id === message._id) {
           message.respondSend = e.option;
-          this.msgOpts = [
-            ...message.options.map((e) => (message.respondSend === e ? e : "")),
-          ];
+          message.options.forEach((e, i) => {
+            this.optionSubjects[i].set(message.respondSend === e ? e : null);
+          });
           this.invalidate();
         }
       });
+
+    for (let i = 0; i < 3; i++) {
+      this.optionSubjects.push(Subject.create());
+      this.msgOpts.push(
+        new DisplayField(this, {
+          formatter: {
+            nullValueString: "",
+            format: (value) => {
+              const message = this.router.params["message"];
+              if (message.respondSend) {
+                return value === message.respondSend ? value : null;
+              }
+              return i === 0 ? `<${value}[blue]` : `${value}>[blue]`;
+            },
+          },
+          onSelected: async () => {
+            const message = this.router.params["message"];
+            if (message.respondSend) return true;
+            this.bus.getPublisher().pub(
+              "acars_message_ack",
+              {
+                option: message.options[i],
+                id: message._id,
+              },
+              true,
+              false,
+            );
+            return true;
+          },
+        }).bind(this.optionSubjects[i]),
+      );
+    }
   }
 
   onDestroy() {
@@ -272,42 +295,14 @@ export class DatalinkMessagePage extends WT21FmcPage {
 
     let messageLines = 5;
     if (message.options) {
-      // messageLines = 5;
-      if (this.msg !== message) {
-        this.msgOpts = [];
-        this.msg = message;
-        if (!message.respondSend) {
-          for (let i = 0; i < message.options.length; i++) {
-            const opt = message.options[i];
-            this.msgOpts.push(
-              new DisplayField(this, {
-                formatter: {
-                  nullValueString: "",
-                  format(value) {
-                    return i === 0 ? `<${opt}[blue]` : `${opt}>[blue]`;
-                  },
-                },
-                onSelected: async () => {
-                  if (message.respondSend) return true;
-                  this.bus.getPublisher().pub(
-                    "acars_message_ack",
-                    {
-                      option: opt,
-                      id: message._id,
-                    },
-                    true,
-                    false,
-                  );
-                  return true;
-                },
-              }).bind(Subject.create(opt)),
-            );
-          }
-        } else {
-          this.msgOpts = [
-            ...message.options.map((e) => (message.respondSend === e ? e : "")),
-          ];
-        }
+      if (!message.respondSend) {
+        message.options.forEach((e, i) => {
+          this.optionSubjects[i].set(e);
+        });
+      } else {
+        message.options.forEach((e, i) => {
+          this.optionSubjects[i].set(message.respondSend === e ? e : null);
+        });
       }
     }
     const pages = message.content
@@ -375,7 +370,7 @@ export class DatalinkMessagePage extends WT21FmcPage {
         ];
       });
 
-    if (message.options && this.msgOpts && this.msgOpts.length === 3) {
+    if (message.options) {
       pages.push([
         [
           "",
@@ -527,7 +522,7 @@ export class DatalinkPreDepartureRequestPage extends WT21FmcPage {
       },
       onSelected: async () => {
         if (this.send.get()) {
-          const freeText = Array(4)
+          const freeText = Array(3)
             .fill()
             .map((_, i) => this[`freeText${i}`].get())
             .filter((e) => e && e.length)
@@ -741,6 +736,19 @@ export class DatalinkPreDepartureRequestPage extends WT21FmcPage {
         return !v || !v.length;
       }),
     );
+  }
+  onResume() {
+    const plan = this.fms.getPlanForFmcRender();
+
+    this.dep.set(
+      plan.originAirport ? msfsSdk.ICAO.getIdent(plan.originAirport) : null,
+    );
+    this.arr.set(
+      plan.destinationAirport
+        ? msfsSdk.ICAO.getIdent(plan.destinationAirport)
+        : null,
+    );
+    this.checkReady();
   }
   render() {
     return [
@@ -1361,7 +1369,7 @@ export class DatalinkDirectToPage extends WT21FmcPage {
       },
       onSelected: async () => {
         if (this.send.get()) {
-          const freeText = Array(4)
+          const freeText = Array(3)
             .fill()
             .map((_, i) => this[`freeText${i}`].get())
             .filter((e) => e && e.length)
@@ -1381,7 +1389,7 @@ export class DatalinkDirectToPage extends WT21FmcPage {
           );
 
           [this.facility].forEach((e) => e.set(""));
-          Array(4)
+          Array(3)
             .fill()
             .forEach((_, i) => this[`freeText${i}`].set(""));
           this.checkReady();

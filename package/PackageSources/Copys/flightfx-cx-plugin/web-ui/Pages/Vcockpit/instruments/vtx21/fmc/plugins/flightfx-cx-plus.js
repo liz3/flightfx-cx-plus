@@ -885,13 +885,11 @@ ${content}`,
   var import_msfs_sdk3 = __toESM(__require("@microsoft/msfs-sdk"), 1);
   var RawFormatter = {
     nullValueString: "",
-    /** @inheritDoc */
     format(value) {
       return value !== null && value !== void 0 ? value : "";
     }
   };
   var PageParamLinkField = class _PageParamLinkField extends import_msfs_wt21_fmc3.DisplayField {
-    /** @inheritDoc */
     constructor(page, options) {
       var _a;
       const opts = {
@@ -908,14 +906,6 @@ ${content}`,
       this.params = options.params;
       this.takeValue(options.label);
     }
-    /**
-     * Creates an {@link PageLinkField}
-     * @param page    the parent {@link FmcPage}
-     * @param label  the label to display
-     * @param route the route to navigate to (will disable link when empty)
-     * @param disabled whether the link is disabled
-     * @returns the {@link PageLinkField}
-     */
     static createLink(page, params, label, route, disabled = false) {
       if (route === "") {
         disabled = true;
@@ -1078,16 +1068,48 @@ ${content}`,
       super(...arguments);
       this.msgOpts = [];
       this.bus = this.eventBus;
+      this.optionSubjects = [];
       this.updateHandler = this.bus.getSubscriber().on("acars_message_state_update").handle((e) => {
         const message = this.router.params["message"];
         if (message && e.id === message._id) {
           message.respondSend = e.option;
-          this.msgOpts = [
-            ...message.options.map((e2) => message.respondSend === e2 ? e2 : "")
-          ];
+          message.options.forEach((e2, i) => {
+            this.optionSubjects[i].set(message.respondSend === e2 ? e2 : null);
+          });
           this.invalidate();
         }
       });
+      for (let i = 0; i < 3; i++) {
+        this.optionSubjects.push(import_msfs_sdk3.Subject.create());
+        this.msgOpts.push(
+          new import_msfs_wt21_fmc3.DisplayField(this, {
+            formatter: {
+              nullValueString: "",
+              format: (value) => {
+                const message = this.router.params["message"];
+                if (message.respondSend) {
+                  return value === message.respondSend ? value : null;
+                }
+                return i === 0 ? `<${value}[blue]` : `${value}>[blue]`;
+              }
+            },
+            onSelected: async () => {
+              const message = this.router.params["message"];
+              if (message.respondSend) return true;
+              this.bus.getPublisher().pub(
+                "acars_message_ack",
+                {
+                  option: message.options[i],
+                  id: message._id
+                },
+                true,
+                false
+              );
+              return true;
+            }
+          }).bind(this.optionSubjects[i])
+        );
+      }
     }
     onDestroy() {
       this.updateHandler.destroy();
@@ -1102,41 +1124,14 @@ ${content}`,
       const message = this.router.params && this.router.params["message"] ? this.router.params["message"] : { id: -1, content: "----", options: null, from: "DEV" };
       let messageLines = 5;
       if (message.options) {
-        if (this.msg !== message) {
-          this.msgOpts = [];
-          this.msg = message;
-          if (!message.respondSend) {
-            for (let i = 0; i < message.options.length; i++) {
-              const opt = message.options[i];
-              this.msgOpts.push(
-                new import_msfs_wt21_fmc3.DisplayField(this, {
-                  formatter: {
-                    nullValueString: "",
-                    format(value) {
-                      return i === 0 ? `<${opt}[blue]` : `${opt}>[blue]`;
-                    }
-                  },
-                  onSelected: async () => {
-                    if (message.respondSend) return true;
-                    this.bus.getPublisher().pub(
-                      "acars_message_ack",
-                      {
-                        option: opt,
-                        id: message._id
-                      },
-                      true,
-                      false
-                    );
-                    return true;
-                  }
-                }).bind(import_msfs_sdk3.Subject.create(opt))
-              );
-            }
-          } else {
-            this.msgOpts = [
-              ...message.options.map((e) => message.respondSend === e ? e : "")
-            ];
-          }
+        if (!message.respondSend) {
+          message.options.forEach((e, i) => {
+            this.optionSubjects[i].set(e);
+          });
+        } else {
+          message.options.forEach((e, i) => {
+            this.optionSubjects[i].set(message.respondSend === e ? e : null);
+          });
         }
       }
       const pages = message.content.replace(/\n/g, " ").split(" ").map((e) => `${e} `).reduce(
@@ -1191,7 +1186,7 @@ ${content}`,
           ["", ""]
         ];
       });
-      if (message.options && this.msgOpts && this.msgOpts.length === 3) {
+      if (message.options) {
         pages.push([
           [
             "",
@@ -1334,7 +1329,7 @@ ${content}`,
         },
         onSelected: async () => {
           if (this.send.get()) {
-            const freeText = Array(4).fill().map((_, i) => this[`freeText${i}`].get()).filter((e) => e && e.length).join(" ");
+            const freeText = Array(3).fill().map((_, i) => this[`freeText${i}`].get()).filter((e) => e && e.length).join(" ");
             this.bus.getPublisher().pub(
               "acars_message_send",
               {
@@ -1522,6 +1517,16 @@ ${content}`,
           return !v || !v.length;
         })
       );
+    }
+    onResume() {
+      const plan = this.fms.getPlanForFmcRender();
+      this.dep.set(
+        plan.originAirport ? import_msfs_sdk3.default.ICAO.getIdent(plan.originAirport) : null
+      );
+      this.arr.set(
+        plan.destinationAirport ? import_msfs_sdk3.default.ICAO.getIdent(plan.destinationAirport) : null
+      );
+      this.checkReady();
     }
     render() {
       return [
@@ -2082,7 +2087,7 @@ ${content}`,
         },
         onSelected: async () => {
           if (this.send.get()) {
-            const freeText = Array(4).fill().map((_, i) => this[`freeText${i}`].get()).filter((e) => e && e.length).join(" ");
+            const freeText = Array(3).fill().map((_, i) => this[`freeText${i}`].get()).filter((e) => e && e.length).join(" ");
             this.bus.getPublisher().pub(
               "acars_message_send",
               {
@@ -2097,7 +2102,7 @@ ${content}`,
               false
             );
             [this.facility].forEach((e) => e.set(""));
-            Array(4).fill().forEach((_, i) => this[`freeText${i}`].set(""));
+            Array(3).fill().forEach((_, i) => this[`freeText${i}`].set(""));
             this.checkReady();
           }
           return true;

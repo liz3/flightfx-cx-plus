@@ -2589,7 +2589,8 @@ ${content}`,
         {
           uuid: "acars-msg",
           message: "DATALINK MESSAGE",
-          type: 2
+          type: 2,
+          sound: 2
         },
         true,
         false

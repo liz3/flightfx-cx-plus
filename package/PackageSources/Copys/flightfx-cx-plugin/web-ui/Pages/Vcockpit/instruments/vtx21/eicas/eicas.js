@@ -255,23 +255,29 @@
                     type: v.type,
                     suffix: v.suffix,
                     active: false,
+                    sound: v.sound,
                 }
             });
                props.bus.getSubscriber().on("pcas_activate").handle(v => {
-                if(!this.casAnnounciations[v] ||this.casAnnounciations[v].active)
+                if(this.casAnnounciations[v] && this.casAnnounciations[v].sound)
+                    this.soundController.playSound(this.casAnnounciations[v].sound === 1 ? this.sndCaution : this.sndWarning);
+                if(!this.casAnnounciations[v] ||this.casAnnounciations[v].active){
                     return;
+                }
                 this.casAnnounciations[v].active = true;
                 this.addAnnunciation(this.casAnnounciations[v]);
-                                this.rerenderNodes();
+                this.rerenderNodes();
                 this.syncWarningCautionVars();
+
             });
              props.bus.getSubscriber().on("pcas_deactivate").handle(v => {
                 if(!this.casAnnounciations[v] || !this.casAnnounciations[v].active)
                     return;
                 this.casAnnounciations[v].active = false;
                 this.removeAnnunciation(this.casAnnounciations[v]);
-                                this.rerenderNodes();
+                this.rerenderNodes();
                 this.syncWarningCautionVars();
+
             });
             msfsSdk.KeyEventManager.getManager(props.bus).then(manager => {
                 manager.interceptKey(CAS.WARNING_PUSH_EVENT, true);

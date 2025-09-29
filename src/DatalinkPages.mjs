@@ -1225,6 +1225,13 @@ export class DatalinkStatusPage extends WT21FmcPage {
 
           return true;
         },
+        onDelete: () => {
+          if(this.activeStation.get())
+            return false;
+          this.send.set("NOTIFY");
+          this.facility.set("");
+          return true;
+        },
       }).bind(this.facility);
       this.sendButton = new DisplayField(this, {
         formatter: {

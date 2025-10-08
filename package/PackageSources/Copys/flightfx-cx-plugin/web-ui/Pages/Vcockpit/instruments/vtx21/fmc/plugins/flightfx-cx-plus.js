@@ -235,12 +235,9 @@
       ["to", receiver],
       ["packet", payload]
     ]);
-    return fetch(
-      `https://www.hoppie.nl/acars/system/connect.html?${params.toString()}`,
-      {
-        method: "GET"
-      }
-    );
+    return fetch(`${state._service_url}?${params.toString()}`, {
+      method: "GET"
+    });
   };
   var responseOptions = (c) => {
     const map = {
@@ -322,10 +319,14 @@
               state._callback(message);
             }
             poll(state);
+          }).catch((err) => {
+            poll(state);
           });
         } else {
           poll(state);
         }
+      }).catch((err) => {
+        poll(state);
       });
     }, 1e4);
   };
@@ -346,7 +347,11 @@
     minutes = minutes.toString().padStart(2, "0");
     return `${hours}:${minutes}`;
   };
-  var createClient = (code, callsign, aicraftType, messageCallback) => {
+  var SERVICES = {
+    hoppie: "https://www.hoppie.nl/acars/system/connect.html",
+    sayintentions: " https://acars.sayintentions.ai/acars/system/connect.html"
+  };
+  var createClient = (code, callsign, aicraftType, messageCallback, service = "hoppie") => {
     const state = {
       code,
       callsign,
@@ -356,7 +361,8 @@
       _min_count: 0,
       aircraft: aicraftType,
       idc: 0,
-      message_stack: {}
+      message_stack: {},
+      _service_url: SERVICES[service]
     };
     state.dispose = () => {
       if (state._interval) clearInterval(state._interval);
@@ -595,6 +601,33 @@ ${content}`,
       );
       return true;
     });
+    bus.getSubscriber().on("cx_network_setting").handle((v) => {
+      const callSign = import_msfs_wt21_shared2.default.FmcUserSettings.getManager(bus).getSetting("flightNumber").get();
+      if (callSign) {
+        if (acars.client) {
+          acars.client.dispose();
+        }
+        acars.client = createClient(
+          GetStoredData("cx_plus_hoppie_code"),
+          callSign,
+          "c750",
+          (message) => {
+            acars.messages.push(message);
+            if (message.type === "send") {
+              publisher.getPublisher().pub("acars_outgoing_message", message, true, false);
+            } else {
+              publisher.pub("acars_incoming_message", message, true, false);
+              publisher.pub("pcas_activate", "acars-msg", true, false);
+            }
+          },
+          v.toLowerCase()
+        );
+        acars.client._stationCallback = (opt) => {
+          publisher.getPublisher().pub("acars_station_status", opt, true, false);
+        };
+      }
+      return true;
+    });
     import_msfs_wt21_shared2.default.FmcUserSettings.getManager(bus).getSetting("flightNumber").sub((value) => {
       if (!value || !value.length) {
         const current = (void 0).acarsClient.get();
@@ -616,9 +649,9 @@ ${content}`,
           } else {
             publisher.pub("acars_incoming_message", message, true, false);
             publisher.pub("pcas_activate", "acars-msg", true, false);
-            ;
           }
-        }
+        },
+        GetStoredData("cx_network_setting") ? GetStoredData("cx_network_setting").toLowerCase() : "hoppie"
       );
       acars.client._stationCallback = (opt) => {
         publisher.getPublisher().pub("acars_station_status", opt, true, false);
@@ -650,6 +683,20 @@ ${content}`,
       this.winwingSetting.sub((v) => {
         SetStoredData("cx_plus_winwing", v === 0 ? "true" : "false");
         this.bus.getPublisher().pub("winwing_setting", v === 0, true, false);
+      });
+      this.networkOptions = ["HOPPIE", "SAYINTENTIONS"];
+      this.networkOption = import_msfs_sdk2.Subject.create(
+        GetStoredData("cx_network_setting") ? this.networkOptions.indexOf(
+          GetStoredData("cx_network_setting").toUpperCase()
+        ) : 0
+      );
+      this.networkSwitch = new import_msfs_wt21_fmc2.SwitchLabel(this, {
+        optionStrings: this.networkOptions,
+        activeStyle: "green"
+      }).bind(this.networkOption);
+      this.networkOption.sub((v) => {
+        SetStoredData("cx_network_setting", this.networkOptions[v]);
+        this.bus.getPublisher().pub("cx_network_setting", this.networkOptions[v], true, false);
       });
       try {
         this.hoppieField = new import_msfs_wt21_fmc2.TextInputField(this, {
@@ -714,8 +761,8 @@ ${content}`,
           [this.hoppieField, ""],
           ["WINWING CDU", ""],
           [this.winwingSwitch, ""],
-          ["", ""],
-          ["", ""],
+          ["", "NETWORK"],
+          ["", this.networkSwitch],
           [this.backLink, ""],
           ["", ""]
         ]
@@ -1952,6 +1999,13 @@ ${content}`,
           },
           onModified: async (scratchpadContents) => {
             this.facility.set(scratchpadContents);
+            return true;
+          },
+          onDelete: () => {
+            if (this.activeStation.get())
+              return false;
+            this.send.set("NOTIFY");
+            this.facility.set("");
             return true;
           }
         }).bind(this.facility);

@@ -33,6 +33,22 @@ class AcarsSettingsPage extends WT21FmcPage {
       SetStoredData("cx_plus_winwing", v === 0 ? "true" : "false");
       this.bus.getPublisher().pub("winwing_setting", v === 0, true, false);
     });
+      this.networkOptions = ["HOPPIE", "SAYINTENTIONS"];
+    this.networkOption = Subject.create(
+      GetStoredData("cx_network_setting")
+        ? this.networkOptions.indexOf(
+            GetStoredData("cx_network_setting").toUpperCase(),
+          )
+        : 0,
+    );
+        this.networkSwitch = new SwitchLabel(this, {
+      optionStrings: this.networkOptions,
+      activeStyle: "green",
+    }).bind(this.networkOption);
+   this.networkOption.sub((v) => {
+      SetStoredData("cx_network_setting", this.networkOptions[v]);
+      this.bus.getPublisher().pub("cx_network_setting", this.networkOptions[v], true, false);
+    });
     try {
       this.hoppieField = new TextInputField(this, {
         formatter: {
@@ -96,8 +112,8 @@ class AcarsSettingsPage extends WT21FmcPage {
         [this.hoppieField, ""],
         ["WINWING CDU", ""],
         [this.winwingSwitch, ""],
-        ["", ""],
-        ["", ""],
+        ["", "NETWORK"],
+        ["", this.networkSwitch],
         [this.backLink, ""],
         ["", ""],
       ],

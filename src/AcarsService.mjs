@@ -105,6 +105,43 @@ const acarsService = (bus) => {
       );
       return true;
     });
+  bus
+    .getSubscriber()
+    .on("cx_network_setting")
+    .handle((v) => {
+      const callSign = wt21Shared.FmcUserSettings.getManager(bus)
+        .getSetting("flightNumber")
+        .get();
+      if (callSign) {
+        if (acars.client) {
+          acars.client.dispose();
+        }
+        acars.client = createClient(
+          GetStoredData("cx_plus_hoppie_code"),
+          callSign,
+          "c750",
+          (message) => {
+            acars.messages.push(message);
+            if (message.type === "send") {
+              publisher
+                .getPublisher()
+                .pub("acars_outgoing_message", message, true, false);
+            } else {
+              publisher.pub("acars_incoming_message", message, true, false);
+              publisher.pub("pcas_activate", "acars-msg", true, false);
+            }
+          },
+          v.toLowerCase(),
+        );
+        acars.client._stationCallback = (opt) => {
+          publisher
+            .getPublisher()
+            .pub("acars_station_status", opt, true, false);
+        };
+      }
+      return true;
+    });
+
   wt21Shared.FmcUserSettings.getManager(bus)
     .getSetting("flightNumber")
     .sub((value) => {
@@ -129,9 +166,12 @@ const acarsService = (bus) => {
               .pub("acars_outgoing_message", message, true, false);
           } else {
             publisher.pub("acars_incoming_message", message, true, false);
-            publisher.pub("pcas_activate","acars-msg", true, false);;
+            publisher.pub("pcas_activate", "acars-msg", true, false);
           }
         },
+         GetStoredData("cx_network_setting")
+          ? GetStoredData("cx_network_setting").toLowerCase()
+          : "hoppie",
       );
       acars.client._stationCallback = (opt) => {
         publisher.getPublisher().pub("acars_station_status", opt, true, false);

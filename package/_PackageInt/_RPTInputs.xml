@@ -1,7 +1,27 @@
 <RPTInputs>
+	<RPTInput Path="D:\Projects\garmin3kacars\g3000-acars\PackageSources\Copys\garmin-3000-acars\plugin\garmin-3000-acars\assets\plane.png">
+		<Package Name="liz3-garmin-3000-acars">
+			<AssetGroup Name="plugin"/>
+		</Package>
+	</RPTInput>
+	<RPTInput Path="D:\Projects\garmin3kacars\g3000-acars\PackageSources\Copys\garmin-3000-acars\plugin\garmin-3000-acars\plugin.js">
+		<Package Name="liz3-garmin-3000-acars">
+			<AssetGroup Name="plugin"/>
+		</Package>
+	</RPTInput>
 	<RPTInput Path="D:\Projects\flightfx-cx-plugin\package\PackageSources\Copys\flightfx-cx-plugin\web-ui\Pages\Vcockpit\instruments\vtx21\fmc\plugins\hook.js">
 		<Package Name="liz3-flightfx-cx-plugin">
 			<AssetGroup Name="web-ui"/>
+		</Package>
+	</RPTInput>
+	<RPTInput Path="D:\Projects\garmin3kacars\g3000-acars\PackageSources\Copys\garmin-3000-acars\plugin\garmin-3000-acars\assets\antenna_green.png">
+		<Package Name="liz3-garmin-3000-acars">
+			<AssetGroup Name="plugin"/>
+		</Package>
+	</RPTInput>
+	<RPTInput Path="D:\Projects\garmin3kacars\g3000-acars\PackageSources\Copys\garmin-3000-acars\plugin\Plugins\g3000-acars.xml">
+		<Package Name="liz3-garmin-3000-acars">
+			<AssetGroup Name="plugin"/>
 		</Package>
 	</RPTInput>
 	<RPTInput Path="D:\Projects\flightfx-cx-plugin\package\PackageSources\Copys\flightfx-cx-plugin\web-ui\Pages\Vcockpit\instruments\vtx21\fmc\plugins\flightfx-cx-plus.js">
@@ -9,9 +29,39 @@
 			<AssetGroup Name="web-ui"/>
 		</Package>
 	</RPTInput>
+	<RPTInput Path="D:\Projects\CitationCJ4Plus\citation-cj4-plus\PackageSources\Copys\citation-cj4-plus\module\CitationCj4PlusModul.wasm">
+		<Package Name="liz3-citation-cj4-plus">
+			<AssetGroup Name="module"/>
+		</Package>
+	</RPTInput>
+	<RPTInput Path="D:\Projects\CitationCJ4Plus\citation-cj4-plus\PackageSources\Copys\citation-cj4-plus\avionics-plugin\Plugins\liz3-citation-cj4-plus.xml">
+		<Package Name="liz3-citation-cj4-plus">
+			<AssetGroup Name="avionics-plugin"/>
+		</Package>
+	</RPTInput>
+	<RPTInput Path="D:\Projects\garmin3kacars\g3000-acars\PackageSources\Copys\garmin-3000-acars\plugin\garmin-3000-acars\plugin.css">
+		<Package Name="liz3-garmin-3000-acars">
+			<AssetGroup Name="plugin"/>
+		</Package>
+	</RPTInput>
+	<RPTInput Path="D:\Projects\CitationCJ4Plus\citation-cj4-plus\PackageSources\Copys\citation-cj4-plus\avionics-plugin\liz3-citation-cj4-plugin\plugin.js">
+		<Package Name="liz3-citation-cj4-plus">
+			<AssetGroup Name="avionics-plugin"/>
+		</Package>
+	</RPTInput>
+	<RPTInput Path="D:\Projects\garmin3kacars\g3000-acars\PackageSources\Copys\garmin-3000-acars\plugin\garmin-3000-acars\assets\anntena.png">
+		<Package Name="liz3-garmin-3000-acars">
+			<AssetGroup Name="plugin"/>
+		</Package>
+	</RPTInput>
 	<RPTInput Path="D:\Projects\flightfx-cx-plugin\package\PackageDefinitions\liz3-flightfx-cx-plugin\ContentInfo\Thumbnail.jpg">
 		<Package Name="liz3-flightfx-cx-plugin">
 			<AssetGroup Name="ContentInfo"/>
+		</Package>
+	</RPTInput>
+	<RPTInput Path="D:\Projects\garmin3kacars\g3000-acars\PackageSources\Copys\garmin-3000-acars\plugin\garmin-3000-acars\assets\tower.png">
+		<Package Name="liz3-garmin-3000-acars">
+			<AssetGroup Name="plugin"/>
 		</Package>
 	</RPTInput>
 	<RPTInput Path="D:\Projects\flightfx-cx-plugin\package\PackageSources\Copys\flightfx-cx-plugin\web-ui\Pages\Vcockpit\instruments\vtx21\eicas\eicas.js">
@@ -19,9 +69,24 @@
 			<AssetGroup Name="web-ui"/>
 		</Package>
 	</RPTInput>
+	<RPTInput Path="D:\Projects\CitationCJ4Plus\citation-cj4-plus\PackageDefinitions\liz3-citation-cj4-plus\ContentInfo\Thumbnail.jpg">
+		<Package Name="liz3-citation-cj4-plus">
+			<AssetGroup Name="ContentInfo"/>
+		</Package>
+	</RPTInput>
 	<RPTInput Path="D:\Projects\flightfx-cx-plugin\package\PackageSources\Copys\flightfx-cx-plugin\web-ui\Pages\Vcockpit\instruments\vtx21\fmc\wt21_fmc.html">
 		<Package Name="liz3-flightfx-cx-plugin">
 			<AssetGroup Name="web-ui"/>
+		</Package>
+	</RPTInput>
+	<RPTInput Path="D:\Projects\garmin3kacars\g3000-acars\PackageSources\Copys\garmin-3000-acars\plugin\garmin-3000-acars\assets\tower_green.png">
+		<Package Name="liz3-garmin-3000-acars">
+			<AssetGroup Name="plugin"/>
+		</Package>
+	</RPTInput>
+	<RPTInput Path="D:\Projects\garmin3kacars\g3000-acars\PackageDefinitions\liz3-garmin-3000-acars\ContentInfo\Thumbnail.jpg">
+		<Package Name="liz3-garmin-3000-acars">
+			<AssetGroup Name="ContentInfo"/>
 		</Package>
 	</RPTInput>
 </RPTInputs>

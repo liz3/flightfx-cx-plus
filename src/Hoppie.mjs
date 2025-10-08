@@ -44,12 +44,9 @@ const sendAcarsMessage = async (state, receiver, payload, messageType) => {
     ["to", receiver],
     ["packet", payload],
   ]);
-  return fetch(
-    `https://www.hoppie.nl/acars/system/connect.html?${params.toString()}`,
-    {
-      method: "GET",
-    },
-  );
+  return fetch(`${state._service_url}?${params.toString()}`, {
+    method: "GET",
+  });
 };
 
 const responseOptions = (c) => {
@@ -103,60 +100,68 @@ const cpdlcStringBuilder = (state, request, replyId = "") => {
 
 const poll = (state) => {
   state._interval = setTimeout(() => {
-    sendAcarsMessage(state, "SERVER", "Nothing", "POLL").then((response) => {
-      if (response.ok) {
-        response.text().then((raw) => {
-          for (const message of parseMessages(raw)) {
-            if (message.from === state.callsign && message.type === "inforeq") {
-              continue;
-            }
-            if (
-              state.active_station &&
-              message.from === state.active_station &&
-              message.content.startsWith("HANDOVER")
-            ) {
-              state.active_station = null;
-              const station = message.content.split(" ")[1];
-              if (station) {
-                const corrected = station.trim().replace("@", "");
-                state.sendLogonRequest(corrected);
-                return;
-              }
-            }
-            message._id = state.idc++;
-            messageStateUpdate(state, message);
-            if (message.type === "cpdlc" && message.cpdlc.ra) {
-              const opts = responseOptions(message.cpdlc.ra);
-              if (opts)
-                message.response = async (code) => {
-                  message.respondSend = code;
-                  if (state._min_count === 63) {
-                    state._min_count = 0;
+    sendAcarsMessage(state, "SERVER", "Nothing", "POLL")
+      .then((response) => {
+        if (response.ok) {
+          response
+            .text()
+            .then((raw) => {
+              for (const message of parseMessages(raw)) {
+                if (
+                  message.from === state.callsign &&
+                  message.type === "inforeq"
+                ) {
+                  continue;
+                }
+                if (
+                  state.active_station &&
+                  message.from === state.active_station &&
+                  message.content.startsWith("HANDOVER")
+                ) {
+                  state.active_station = null;
+                  const station = message.content.split(" ")[1];
+                  if (station) {
+                    const corrected = station.trim().replace("@", "");
+                    state.sendLogonRequest(corrected);
+                    return;
                   }
-                  state._min_count++;
-                  sendAcarsMessage(
-                    state,
-                    message.from,
-                    `/data2/${state._min_count}/${message.cpdlc.min}/${code === "STANDBY" ? "NE" : "N"}/${code}`,
-                    "cpdlc",
-                  );
-                };
-              message.options = opts;
-              message.respondSend = null;
-            }
-            state.message_stack[message._id] = message;
-            state._callback(message);
-          }
+                }
+                message._id = state.idc++;
+                messageStateUpdate(state, message);
+                if (message.type === "cpdlc" && message.cpdlc.ra) {
+                  const opts = responseOptions(message.cpdlc.ra);
+                  if (opts)
+                    message.response = async (code) => {
+                      message.respondSend = code;
+                      if (state._min_count === 63) {
+                        state._min_count = 0;
+                      }
+                      state._min_count++;
+                      sendAcarsMessage(
+                        state,
+                        message.from,
+                        `/data2/${state._min_count}/${message.cpdlc.min}/${code === "STANDBY" ? "NE" : "N"}/${code}`,
+                        "cpdlc",
+                      );
+                    };
+                  message.options = opts;
+                  message.respondSend = null;
+                }
+                state.message_stack[message._id] = message;
+                state._callback(message);
+              }
+              poll(state);
+            })
+            .catch((err) => {
+              poll(state);
+            });
+        } else {
           poll(state);
-        }).catch((err) => {
-      poll(state);
-    });
-      } else {
+        }
+      })
+      .catch((err) => {
         poll(state);
-      }
-    }).catch((err) => {
-      poll(state);
-    });
+      });
   }, 10000);
 };
 
@@ -182,8 +187,18 @@ export const convertUnixToHHMM = (unixTimestamp) => {
   return `${hours}:${minutes}`;
 };
 
-export const createClient = (code, callsign, aicraftType, messageCallback) => {
+const SERVICES = {
+  hoppie: "https://www.hoppie.nl/acars/system/connect.html",
+  sayintentions: " https://acars.sayintentions.ai/acars/system/connect.html",
+};
 
+export const createClient = (
+  code,
+  callsign,
+  aicraftType,
+  messageCallback,
+  service = "hoppie",
+) => {
   const state = {
     code,
     callsign,
@@ -194,6 +209,7 @@ export const createClient = (code, callsign, aicraftType, messageCallback) => {
     aircraft: aicraftType,
     idc: 0,
     message_stack: {},
+    _service_url: SERVICES[service],
   };
 
   state.dispose = () => {
@@ -356,7 +372,6 @@ export const createClient = (code, callsign, aicraftType, messageCallback) => {
     const text = await response.text();
     return text.startsWith("ok");
   };
-  
 
   state.sendDirectTo = async (waypoint, reason, freeText) => {
     const response = await sendAcarsMessage(

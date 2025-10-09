@@ -1042,7 +1042,7 @@ export class DatalinkOceanicRequestPage extends WT21FmcPage {
         ["ENRTY POINT[blue]", "AT TIME[blue]"],
         [this.entryPointField, this.timeField],
         ["MACH[blue]", "FLT LEVEL[blue]"],
-        [this.machField, this.flightIdField],
+        [this.machField, this.fltLvlField],
         [
           PageLinkField.createLink(this, "<RETURN", "/datalink-menu"),
           this.sendButton,

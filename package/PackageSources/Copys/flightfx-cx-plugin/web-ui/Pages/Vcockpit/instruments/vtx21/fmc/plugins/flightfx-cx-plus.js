@@ -291,7 +291,7 @@
                 if (station) {
                   const corrected = station.trim().replace("@", "");
                   state.sendLogonRequest(corrected);
-                  return;
+                  continue;
                 }
               }
               message._id = state.idc++;
@@ -443,7 +443,7 @@ ${content}`,
         to,
         addMessage(
           state,
-          `REQUEST OCEANIC CLEARANCE ${cs} ${state.aircraft} ESTIMATING ${entryPoint} AT ${eta}Z FLIGHT LEVEL ${lvl} REQUEST MACH ${mach}${freeText.length ? ` ${freeText}` : ""}`.toUpperCase()
+          `REQUEST OCEANIC CLEARANCE ${cs} ${state.aircraft} ESTIMATING ${entryPoint} AT ${eta}Z FLIGHT LEVEL ${level} REQUEST MACH ${mach}${freeText.length ? ` ${freeText}` : ""}`.toUpperCase()
         ),
         "telex"
       );
@@ -465,7 +465,7 @@ ${content}`,
       const text = await response.text();
       return text.startsWith("ok");
     };
-    state.sendLevelChange = async (lvl2, climb, reason, freeText) => {
+    state.sendLevelChange = async (lvl, climb, reason, freeText) => {
       const response = await sendAcarsMessage(
         state,
         state.active_station,
@@ -473,7 +473,7 @@ ${content}`,
           state,
           addMessage(
             state,
-            `REQUEST ${climb ? "CLIMB" : "DESCEND"} TO FL${lvl2} DUE TO ${{ weather: "weather", performance: "aircraft performance" }[reason.toLowerCase()]}${freeText.length ? ` ${freeText}` : ""}`.toUpperCase()
+            `REQUEST ${climb ? "CLIMB" : "DESCEND"} TO FL${lvl} DUE TO ${{ weather: "weather", performance: "aircraft performance" }[reason.toLowerCase()]}${freeText.length ? ` ${freeText}` : ""}`.toUpperCase()
           )
         ),
         "cpdlc"
@@ -614,7 +614,7 @@ ${content}`,
           (message) => {
             acars.messages.push(message);
             if (message.type === "send") {
-              publisher.getPublisher().pub("acars_outgoing_message", message, true, false);
+              publisher.pub("acars_outgoing_message", message, true, false);
             } else {
               publisher.pub("acars_incoming_message", message, true, false);
               publisher.pub("pcas_activate", "acars-msg", true, false);
@@ -623,7 +623,7 @@ ${content}`,
           v.toLowerCase()
         );
         acars.client._stationCallback = (opt) => {
-          publisher.getPublisher().pub("acars_station_status", opt, true, false);
+          publisher.pub("acars_station_status", opt, true, false);
         };
       }
       return true;
@@ -645,7 +645,7 @@ ${content}`,
         (message) => {
           acars.messages.push(message);
           if (message.type === "send") {
-            publisher.getPublisher().pub("acars_outgoing_message", message, true, false);
+            publisher.pub("acars_outgoing_message", message, true, false);
           } else {
             publisher.pub("acars_incoming_message", message, true, false);
             publisher.pub("pcas_activate", "acars-msg", true, false);
@@ -654,7 +654,7 @@ ${content}`,
         GetStoredData("cx_network_setting") ? GetStoredData("cx_network_setting").toLowerCase() : "hoppie"
       );
       acars.client._stationCallback = (opt) => {
-        publisher.getPublisher().pub("acars_station_status", opt, true, false);
+        publisher.pub("acars_station_status", opt, true, false);
       };
     });
   };

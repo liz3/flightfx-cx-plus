@@ -980,12 +980,12 @@ export class DatalinkOceanicRequestPage extends WT21FmcPage {
     this.fltLvlField = new TextInputField(this, {
       formatter: {
         nullValueString: "---",
-        maxLength: 3,
+        maxLength: 5,
         format(value) {
-          return value ? `${value}[blue]` : this.nullValueString;
+          return value ? `FL${value}[blue]` : this.nullValueString;
         },
         async parse(input) {
-          return input;
+          return input.startsWith("FL") ? input.substr(2) : input;
         },
       },
       onModified: async (scratchpadContents) => {

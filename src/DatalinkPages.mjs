@@ -131,7 +131,6 @@ export class DatalinkSendMessagesPage extends WT21FmcPage {
 export class DatalinkReceivedMessagesPage extends WT21FmcPage {
   constructor() {
     super(...arguments);
-
     this.messages = Subject.create([[]]);
     this.bus = this.eventBus;
     this.bus
@@ -203,7 +202,7 @@ export class DatalinkReceivedMessagesPage extends WT21FmcPage {
   }
 
   render() {
-    this.bus.getPublisher().pub("pcas_deactivate", "acars-msg", true, false);
+  
 
     return this.messages.get().map((page) => {
       const array = Array(6)
@@ -292,7 +291,10 @@ export class DatalinkMessagePage extends WT21FmcPage {
       this.router.params && this.router.params["message"]
         ? this.router.params["message"]
         : { id: -1, content: "----", options: null, from: "DEV" };
-
+    if(message.id !== -1 && !message.read){
+      this.bus.getPublisher().pub("pcas_deactivate", "acars-msg", true, false);
+      message.read = true;
+    }
     let messageLines = 5;
     if (message.options) {
       if (!message.respondSend) {

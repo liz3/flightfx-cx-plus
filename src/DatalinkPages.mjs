@@ -13,7 +13,11 @@ import msfsSdk, {
   Subject,
 } from "@microsoft/msfs-sdk";
 import { convertUnixToHHMM } from "./Hoppie.mjs";
-import { fetchAcarsMessages, fetchAcarsStatus } from "./AcarsService.mjs";
+import {
+  deleteMessage,
+  fetchAcarsMessages,
+  fetchAcarsStatus,
+} from "./AcarsService.mjs";
 const RawFormatter = {
   nullValueString: "",
   format(value) {
@@ -79,7 +83,17 @@ export class DatalinkSendMessagesPage extends WT21FmcPage {
         this.messages.set(current);
         this.invalidate();
       });
-
+    this.bus
+      .getSubscriber()
+      .on("acars_message_removal")
+      .handle((idv) => {
+        const current = this.messages.get();
+        for (let i = 0; i < current.length; i += 1) {
+          current[i] = current[i].filter((e) => e.message._id !== idv);
+        }
+        this.messages.set(current);
+        this.invalidate();
+      });
     fetchAcarsMessages(this.bus, "send").then((messages) => {
       for (const message of messages) {
         const current = this.messages.get();
@@ -114,12 +128,12 @@ export class DatalinkSendMessagesPage extends WT21FmcPage {
         .map((e) => ["", ""]);
       page.forEach((val, index) => {
         const nn = index * 2;
-        array[nn] = [`${convertUnixToHHMM(val.message.ts)}[blue]`, ""];
-        array[nn + 1] = [val.link, ""];
+        array[nn] = [`${convertUnixToHHMM(val.message.ts)}[green]`, ""];
+        array[nn + 1] = [val.link];
       });
 
       return [
-        ["", this.PagingIndicator, "SEND MSGS[blue]"],
+        ["", this.PagingIndicator, "SEND MSGS[green]"],
         ...array,
         [PageLinkField.createLink(this, "<RETURN", "/datalink-menu"), ""],
         [],
@@ -133,6 +147,17 @@ export class DatalinkReceivedMessagesPage extends WT21FmcPage {
     super(...arguments);
     this.messages = Subject.create([[]]);
     this.bus = this.eventBus;
+    this.bus
+      .getSubscriber()
+      .on("acars_message_removal")
+      .handle((idv) => {
+        const current = this.messages.get();
+        for (let i = 0; i < current.length; i += 1) {
+          current[i] = current[i].filter((e) => e.message._id !== idv);
+        }
+        this.messages.set(current);
+        this.invalidate();
+      });
     this.bus
       .getSubscriber()
       .on("acars_incoming_message")
@@ -202,20 +227,18 @@ export class DatalinkReceivedMessagesPage extends WT21FmcPage {
   }
 
   render() {
-  
-
     return this.messages.get().map((page) => {
       const array = Array(6)
         .fill()
         .map((e) => ["", ""]);
       page.forEach((val, index) => {
         const nn = index * 2;
-        array[nn] = [`${convertUnixToHHMM(val.message.ts)}[blue]`, ""];
-        array[nn + 1] = [val.link, ""];
+        array[nn] = [`${convertUnixToHHMM(val.message.ts)}[green]`, ""];
+        array[nn + 1] = [val.link];
       });
 
       return [
-        ["", this.PagingIndicator, "RCVD MSGS[blue]"],
+        ["", this.PagingIndicator, "RCVD MSGS[green]"],
         ...array,
         [PageLinkField.createLink(this, "<RETURN", "/datalink-menu"), ""],
         [],
@@ -243,7 +266,24 @@ export class DatalinkMessagePage extends WT21FmcPage {
           this.invalidate();
         }
       });
-
+    this.deleteField = new DisplayField(this, {
+      formatter: {
+        nullValueString: "DEL>",
+        format: (value) => {
+          return "DEL>";
+        },
+      },
+      onSelected: async () => {
+        const message = this.router.params["message"];
+        if (message) {
+          this.router.navigateTo(
+            `/datalink-extra/${message.type === "send" ? "send-msgs" : "recv-msgs"}`,
+          );
+          deleteMessage(this.bus, message._id);
+        }
+        return true;
+      },
+    });
     for (let i = 0; i < 3; i++) {
       this.optionSubjects.push(Subject.create());
       this.msgOpts.push(
@@ -255,7 +295,7 @@ export class DatalinkMessagePage extends WT21FmcPage {
               if (message.respondSend) {
                 return value === message.respondSend ? value : null;
               }
-              return i === 0 ? `<${value}[blue]` : `${value}>[blue]`;
+              return i === 0 ? `<${value}[green]` : `${value}>[green]`;
             },
           },
           onSelected: async () => {
@@ -291,7 +331,7 @@ export class DatalinkMessagePage extends WT21FmcPage {
       this.router.params && this.router.params["message"]
         ? this.router.params["message"]
         : { id: -1, content: "----", options: null, from: "DEV" };
-    if(message.id !== -1 && !message.read){
+    if (message.id !== -1 && !message.read) {
       this.bus.getPublisher().pub("pcas_deactivate", "acars-msg", true, false);
       message.read = true;
     }
@@ -355,9 +395,9 @@ export class DatalinkMessagePage extends WT21FmcPage {
           [
             "",
             this.PagingIndicator,
-            `${message.type === "send" ? "SEND" : "RECV"} MSG[blue]`,
+            `${message.type === "send" ? "SEND" : "RECV"} MSG[green]`,
           ],
-          [`${convertUnixToHHMM(message.ts)}[blue]`, ""],
+          [`${convertUnixToHHMM(message.ts)}[green]`, ""],
           ...page,
 
           [
@@ -366,7 +406,7 @@ export class DatalinkMessagePage extends WT21FmcPage {
               "<RETURN",
               `/datalink-extra/${message.type === "send" ? "send-msgs" : "recv-msgs"}`,
             ),
-            "",
+            this.deleteField,
           ],
           ["", ""],
         ];
@@ -377,9 +417,9 @@ export class DatalinkMessagePage extends WT21FmcPage {
         [
           "",
           this.PagingIndicator,
-          `${message.type === "send" ? "SEND" : "RECV"} MSG[blue]`,
+          `${message.type === "send" ? "SEND" : "RECV"} MSG[green]`,
         ],
-        [`${convertUnixToHHMM(message.ts)}[blue]`, ""],
+        [`${convertUnixToHHMM(message.ts)}[green]`, ""],
         [message.from, ""],
         ["", ""],
         [this.msgOpts[0], this.msgOpts[1]],
@@ -447,7 +487,7 @@ export class DatalinkAtisPage extends WT21FmcPage {
         nullValueString: "----",
         maxLength: 4,
         format(value) {
-          return value ? `${value}[blue]` : this.nullValueString;
+          return value ? `${value}[green]` : this.nullValueString;
         },
         async parse(input) {
           return input;
@@ -466,14 +506,14 @@ export class DatalinkAtisPage extends WT21FmcPage {
   render() {
     return [
       [
-        ["ATIS REQ[blue]"],
-        ["FACILITY[blue]"],
+        ["ATC WX REPORT"],
+        [" FACILITY"],
         [this.facilityField],
-        ["TYPE[blue]", ""],
+        [" TYPE", ""],
         [this.typeSwitch, ""],
         ["", ""],
         ["", this.sendButton],
-        [PageLinkField.createLink(this, "<RETURN", "/datalink-menu"), ""],
+        [PageLinkField.createLink(this, "<ATC INDEX", "/datalink-menu"), ""],
         ["", ""],
       ],
     ];
@@ -497,10 +537,10 @@ export class DatalinkPreDepartureRequestPage extends WT21FmcPage {
       this[`freeText${i}`] = Subject.create("");
       this[`freeTextField${i}`] = new TextInputField(this, {
         formatter: {
-          nullValueString: "(----------------------)[blue]",
+          nullValueString: "(----------------------)[green]",
           maxLength: 24,
           format(value) {
-            return value ? `${value}[blue]` : this.nullValueString;
+            return value ? `${value}[green]` : this.nullValueString;
           },
           async parse(input) {
             return input;
@@ -562,7 +602,7 @@ export class DatalinkPreDepartureRequestPage extends WT21FmcPage {
         nullValueString: "-------",
         maxLength: 7,
         format(value) {
-          return value ? `${value}[blue]` : this.nullValueString;
+          return value ? `${value}[green]` : this.nullValueString;
         },
         async parse(input) {
           return input;
@@ -579,7 +619,7 @@ export class DatalinkPreDepartureRequestPage extends WT21FmcPage {
         nullValueString: "-------",
         maxLength: 7,
         format(value) {
-          return value ? `${value}[blue]` : this.nullValueString;
+          return value ? `${value}[green]` : this.nullValueString;
         },
         async parse(input) {
           return input;
@@ -597,7 +637,7 @@ export class DatalinkPreDepartureRequestPage extends WT21FmcPage {
         nullValueString: "----",
         maxLength: 4,
         format(value) {
-          return value ? `${value}[blue]` : this.nullValueString;
+          return value ? `${value}[green]` : this.nullValueString;
         },
         async parse(input) {
           return input;
@@ -614,7 +654,7 @@ export class DatalinkPreDepartureRequestPage extends WT21FmcPage {
         nullValueString: "-",
         maxLength: 1,
         format(value) {
-          return value ? `${value}[blue]` : this.nullValueString;
+          return value ? `${value}[green]` : this.nullValueString;
         },
         async parse(input) {
           return input;
@@ -632,7 +672,7 @@ export class DatalinkPreDepartureRequestPage extends WT21FmcPage {
         nullValueString: "----",
         maxLength: 4,
         format(value) {
-          return value ? `${value}[blue]` : this.nullValueString;
+          return value ? `${value}[green]` : this.nullValueString;
         },
         async parse(input) {
           return input;
@@ -650,7 +690,7 @@ export class DatalinkPreDepartureRequestPage extends WT21FmcPage {
         nullValueString: "----",
         maxLength: 4,
         format(value) {
-          return value ? `${value}[blue]` : this.nullValueString;
+          return value ? `${value}[green]` : this.nullValueString;
         },
         async parse(input) {
           return input;
@@ -668,7 +708,7 @@ export class DatalinkPreDepartureRequestPage extends WT21FmcPage {
         nullValueString: "-----",
         maxLength: 7,
         format(value) {
-          return value ? `${value}[blue]` : this.nullValueString;
+          return value ? `${value}[green]` : this.nullValueString;
         },
         async parse(input) {
           return input;
@@ -755,19 +795,19 @@ export class DatalinkPreDepartureRequestPage extends WT21FmcPage {
   render() {
     return [
       [
-        ["", this.PagingIndicator, "DEPART CLX REQ[blue]"],
-        ["ATS FLT ID[blue]", "FACILITY[blue]"],
+        ["", this.PagingIndicator, "DEPART CLX REQ[green]"],
+        ["ATS FLT ID[green]", "FACILITY[green]"],
         [this.flightIdField, this.facilityField],
-        ["A/C TYPE[blue]", "ATIS[blue]"],
+        ["A/C TYPE[green]", "ATIS[green]"],
         [this.acTypeField, this.atisField],
-        ["ORIG STA[blue]", "DEST STA[blue]"],
+        ["ORIG STA[green]", "DEST STA[green]"],
         [this.depField, this.arrField],
         [PageLinkField.createLink(this, "<RETURN", "/datalink-menu"), ""],
         ["", ""],
       ],
       [
-        ["", this.PagingIndicator, "DEPART CLX REQ[blue]"],
-        ["GATE[blue]", ""],
+        ["", this.PagingIndicator, "DEPART CLX REQ[green]"],
+        ["GATE[green]", ""],
         [this.gateField, ""],
         ["", ""],
         ["", ""],
@@ -777,8 +817,8 @@ export class DatalinkPreDepartureRequestPage extends WT21FmcPage {
         ["", ""],
       ],
       [
-        ["", this.PagingIndicator, "DEPART CLX REQ[blue]"],
-        [" REMARKS[blue]", ""],
+        ["", this.PagingIndicator, "DEPART CLX REQ[green]"],
+        [" REMARKS[green]", ""],
         [this.freeTextField0, ""],
         ["", ""],
         [this.freeTextField1, ""],
@@ -810,10 +850,10 @@ export class DatalinkOceanicRequestPage extends WT21FmcPage {
       this[`freeText${i}`] = Subject.create("");
       this[`freeTextField${i}`] = new TextInputField(this, {
         formatter: {
-          nullValueString: "(----------------------)[blue]",
+          nullValueString: "(----------------------)[green]",
           maxLength: 24,
           format(value) {
-            return value ? `${value}[blue]` : this.nullValueString;
+            return value ? `${value}[green]` : this.nullValueString;
           },
           async parse(input) {
             return input;
@@ -882,7 +922,7 @@ export class DatalinkOceanicRequestPage extends WT21FmcPage {
         nullValueString: "-------",
         maxLength: 7,
         format(value) {
-          return value ? `${value}[blue]` : this.nullValueString;
+          return value ? `${value}[green]` : this.nullValueString;
         },
         async parse(input) {
           return input;
@@ -899,7 +939,7 @@ export class DatalinkOceanicRequestPage extends WT21FmcPage {
         nullValueString: "-----------",
         maxLength: 11,
         format(value) {
-          return value ? `${value}[blue]` : this.nullValueString;
+          return value ? `${value}[green]` : this.nullValueString;
         },
         async parse(input) {
           return input;
@@ -917,7 +957,7 @@ export class DatalinkOceanicRequestPage extends WT21FmcPage {
         nullValueString: "-----------",
         maxLength: 11,
         format(value) {
-          return value ? `${value}[blue]` : this.nullValueString;
+          return value ? `${value}[green]` : this.nullValueString;
         },
         async parse(input) {
           return input;
@@ -935,7 +975,7 @@ export class DatalinkOceanicRequestPage extends WT21FmcPage {
         nullValueString: "--:--",
         maxLength: 11,
         format(value) {
-          return value ? `${value}[blue]` : this.nullValueString;
+          return value ? `${value}[green]` : this.nullValueString;
         },
         async parse(input) {
           return input;
@@ -961,7 +1001,7 @@ export class DatalinkOceanicRequestPage extends WT21FmcPage {
         nullValueString: ".--",
         maxLength: 3,
         format(value) {
-          return value ? `${value}[blue]` : this.nullValueString;
+          return value ? `${value}[green]` : this.nullValueString;
         },
         async parse(input) {
           return input;
@@ -984,7 +1024,7 @@ export class DatalinkOceanicRequestPage extends WT21FmcPage {
         nullValueString: "---",
         maxLength: 5,
         format(value) {
-          return value ? `FL${value}[blue]` : this.nullValueString;
+          return value ? `FL${value}[green]` : this.nullValueString;
         },
         async parse(input) {
           return input.startsWith("FL") ? input.substr(2) : input;
@@ -1038,12 +1078,12 @@ export class DatalinkOceanicRequestPage extends WT21FmcPage {
   render() {
     return [
       [
-        ["", this.PagingIndicator, "OCEANIC CLX RQ[blue]"],
-        ["ATS FLT ID[blue]", "FACILITY[blue]"],
+        ["", this.PagingIndicator, "OCEANIC CLX RQ[green]"],
+        ["ATS FLT ID[green]", "FACILITY[green]"],
         [this.flightIdField, this.facilityField],
-        ["ENRTY POINT[blue]", "AT TIME[blue]"],
+        ["ENRTY POINT[green]", "AT TIME[green]"],
         [this.entryPointField, this.timeField],
-        ["MACH[blue]", "FLT LEVEL[blue]"],
+        ["MACH[green]", "FLT LEVEL[green]"],
         [this.machField, this.fltLvlField],
         [
           PageLinkField.createLink(this, "<RETURN", "/datalink-menu"),
@@ -1052,8 +1092,8 @@ export class DatalinkOceanicRequestPage extends WT21FmcPage {
         ["", ""],
       ],
       [
-        ["", this.PagingIndicator, "OCEANIC CLX REQ[blue]"],
-        [" REMARKS[blue]", ""],
+        ["", this.PagingIndicator, "OCEANIC CLX REQ[green]"],
+        [" REMARKS[green]", ""],
         [this.freeTextField0, ""],
         ["", ""],
         [this.freeTextField1, ""],
@@ -1080,10 +1120,10 @@ export class DatalinkTelexPage extends WT21FmcPage {
         this[`freeText${i}`] = Subject.create("");
         this[`freeTextField${i}`] = new TextInputField(this, {
           formatter: {
-            nullValueString: "(----------------------)[blue]",
+            nullValueString: "(----------------------)[green]",
             maxLength: 24,
             format(value) {
-              return value ? `${value}[blue]` : this.nullValueString;
+              return value ? `${value}[green]` : this.nullValueString;
             },
             async parse(input) {
               return input;
@@ -1102,7 +1142,7 @@ export class DatalinkTelexPage extends WT21FmcPage {
           nullValueString: "SEND",
           /** @inheritDoc */
           format(value) {
-            return `SEND[${value ? "blue" : "white"}]`;
+            return `SEND[${value ? "green" : "white"}]`;
           },
         },
         onSelected: async () => {
@@ -1136,7 +1176,7 @@ export class DatalinkTelexPage extends WT21FmcPage {
           nullValueString: "-------",
           maxLength: 7,
           format(value) {
-            return value ? `${value}[blue]` : this.nullValueString;
+            return value ? `${value}[green]` : this.nullValueString;
           },
           async parse(input) {
             return input;
@@ -1170,29 +1210,29 @@ export class DatalinkTelexPage extends WT21FmcPage {
   render() {
     return [
       [
-        ["", this.PagingIndicator, "TELEX[blue]"],
-        ["FACILITY[blue]", ""],
+        ["", this.PagingIndicator, "FREE TEXT"],
+        ["TO[green]", ""],
         [this.facilityField, ""],
-        [" REMARKS[blue]", ""],
+        [" FREE TEXT", ""],
         [this.freeTextField0, ""],
         ["", ""],
         [this.freeTextField1, ""],
         [
-          PageLinkField.createLink(this, "<RETURN", "/datalink-menu"),
+          PageLinkField.createLink(this, "<ATC INDEX", "/datalink-menu"),
           this.sendButton,
         ],
         ["", ""],
       ],
       [
-        ["", this.PagingIndicator, "TELEX[blue]"],
-        [" REMARKS[blue]", ""],
+        ["", this.PagingIndicator, "FREE TEXT"],
+        [" FREE TEXT", ""],
         [this.freeTextField2, ""],
         ["", ""],
         [this.freeTextField3, ""],
         ["", ""],
         [this.freeTextField4, ""],
         [
-          PageLinkField.createLink(this, "<RETURN", "/datalink-menu"),
+          PageLinkField.createLink(this, "<ATC INDEX", "/datalink-menu"),
           this.sendButton,
         ],
         ["", ""],
@@ -1206,17 +1246,23 @@ export class DatalinkStatusPage extends WT21FmcPage {
     try {
       super(...arguments);
       this.facility = Subject.create("");
+      this.nextFacility = Subject.create("");
       this.send = Subject.create("NOTIFY");
       this.status = Subject.create(null);
       this.activeStation = Subject.create("");
       this.bus = this.eventBus;
-
+      this.tailNo = Subject.create(SimVar.GetSimVarValue("ATC ID", "string"));
+      this.callsign = Subject.create(
+        wt21Shared.FmcUserSettings.getManager(this.eventBus)
+          .getSetting("flightNumber")
+          .get(),
+      );
       this.facilityField = new TextInputField(this, {
         formatter: {
           nullValueString: "------",
           maxLength: 11,
           format(value) {
-            return value ? `${value}[blue]` : this.nullValueString;
+            return value ? `${value}[green]` : this.nullValueString;
           },
           async parse(input) {
             return input;
@@ -1228,19 +1274,38 @@ export class DatalinkStatusPage extends WT21FmcPage {
           return true;
         },
         onDelete: () => {
-          if(this.activeStation.get())
-            return false;
+          if (this.activeStation.get()) return false;
           this.send.set("NOTIFY");
           this.facility.set("");
           return true;
         },
       }).bind(this.facility);
+      this.tailField = new TextInputField(this, {
+        formatter: {
+          nullValueString: "------",
+          maxLength: 7,
+          format(value) {
+            return value ? `${value}[blue]` : this.nullValueString;
+          },
+          async parse(input) {
+            return input;
+          },
+        },
+        onModified: async (scratchpadContents) => {
+          this.tailNo.set(scratchpadContents);
+          return true;
+        },
+        onDelete: () => {
+          this.tailNo.set(null);
+          return true;
+        },
+      }).bind(this.tailNo);
       this.sendButton = new DisplayField(this, {
         formatter: {
           nullValueString: "",
           /** @inheritDoc */
           format(value) {
-            return `<${value}[blue]`;
+            return `${value}>[green]`;
           },
         },
         onSelected: async () => {
@@ -1278,6 +1343,43 @@ export class DatalinkStatusPage extends WT21FmcPage {
           },
         },
       }).bind(this.status);
+      this.nextField = new DisplayField(this, {
+        formatter: {
+          nullValueString: "",
+          /** @inheritDoc */
+          format(value) {
+            return value;
+          },
+        },
+      }).bind(this.nextFacility);
+
+      this.callsignField = new TextInputField(this, {
+        formatter: {
+          nullValueString: "-------",
+          maxLength: 7,
+          format(value) {
+            return value ? `${value}[green]` : this.nullValueString;
+          },
+          async parse(input) {
+            return input;
+          },
+        },
+        onModified: async (scratchpadContents) => {
+          wt21Shared.FmcUserSettings.getManager(this.eventBus)
+            .getSetting("flightNumber")
+            .set(scratchpadContents);
+          return true;
+        },
+        onDelete: () => {
+          wt21Shared.FmcUserSettings.getManager(this.eventBus)
+            .getSetting("flightNumber")
+            .set(null);
+        },
+      }).bind(this.callsign);
+
+      wt21Shared.FmcUserSettings.getManager(this.eventBus)
+        .getSetting("flightNumber")
+        .sub((v) => this.callsign.set(v));
 
       this.bus
         .getSubscriber()
@@ -1285,12 +1387,14 @@ export class DatalinkStatusPage extends WT21FmcPage {
         .handle((message) => {
           if (message.active) {
             this.status.set(`${message.active}[green]`);
+            this.nextFacility.set("");
             this.activeStation.set(true);
             this.send.set("LOGOFF");
             this.facility.set("");
           } else {
             if (message.pending) {
-              this.status.set(`${message.pending} NOTIFIED[green]`);
+              this.nextFacility.set(`${message.pending}[green]`);
+              this.status.set(``);
               this.send.set("NOTIFY AGAIN");
             } else {
               this.send.set("NOTIFY");
@@ -1308,14 +1412,17 @@ export class DatalinkStatusPage extends WT21FmcPage {
   render() {
     return [
       [
-        ["", "", "STATUS[blue]"],
-        ["FACILITY[blue]", ""],
+        ["", "", "ATC LOGON/STATUS"],
+        [" LOGON TO", ""],
         [this.facilityField, ""],
-        ["STATUS[blue]", ""],
-        [this.statusField, ""],
-        ["", ""],
-        [this.sendButton, ""],
-        [PageLinkField.createLink(this, "<RETURN", "/datalink-menu"), ""],
+        [" FLT ID", "ACT CTR "],
+        [this.callsignField, this.statusField],
+        [" TAIL NO", "NEXT CTR "],
+        [this.tailField, this.nextField],
+        [
+          PageLinkField.createLink(this, "<ATC INDEX", "/datalink-menu"),
+          this.sendButton,
+        ],
         ["", ""],
       ],
     ];
@@ -1346,7 +1453,7 @@ export class DatalinkDirectToPage extends WT21FmcPage {
         nullValueString: "----",
         /** @inheritDoc */
         format(value) {
-          return `${value}[blue]`;
+          return `${value}[green]`;
         },
       },
     }).bind(this.station);
@@ -1354,7 +1461,7 @@ export class DatalinkDirectToPage extends WT21FmcPage {
       this[`freeText${i}`] = Subject.create("");
       this[`freeTextField${i}`] = new msfsSdk.TextInputField(this, {
         formatter: {
-          nullValueString: "(----------------------)[blue]",
+          nullValueString: "(----------------------)[green]",
           maxLength: 24,
         },
         onSelected: async (scratchpadContents) => {
@@ -1373,7 +1480,7 @@ export class DatalinkDirectToPage extends WT21FmcPage {
         nullValueString: "SEND",
         /** @inheritDoc */
         format(value) {
-          return `SEND[${value ? "blue" : "white"}]`;
+          return `SEND[${value ? "green" : "white"}]`;
         },
       },
       onSelected: async () => {
@@ -1412,7 +1519,7 @@ export class DatalinkDirectToPage extends WT21FmcPage {
         nullValueString: "-----",
         maxLength: 5,
         format(value) {
-          return value ? `${value}[blue]` : this.nullValueString;
+          return value ? `${value}[green]` : this.nullValueString;
         },
         async parse(input) {
           return input;
@@ -1441,26 +1548,37 @@ export class DatalinkDirectToPage extends WT21FmcPage {
   render() {
     return [
       [
-        ["", this.PagingIndicator, "DIRECT CLX REQ[blue]"],
-        ["WAYPOINT[blue]", ""],
+        ["", this.PagingIndicator, "ATC DIRECT REQUEST"],
+        [" WAYPOINT", ""],
         [this.facilityField, ""],
-        ["REASON[blue]", ""],
+        [" DUE TO", ""],
         [this.reasonField, ""],
         ["", ""],
         [this.stationField, this.sendButton],
-        [PageLinkField.createLink(this, "<RETURN", "/datalink-menu"), ""],
+        [
+          PageLinkField.createLink(
+            this,
+            "<REQUEST",
+            "/datalink-extra/inflt-comms",
+          ),
+          "",
+        ],
         ["", ""],
       ],
       [
-        ["", this.PagingIndicator, "DIRECT CLX REQ[blue]"],
-        [" REMARKS[blue]", ""],
+        ["", this.PagingIndicator, "ATC DIRECT REQUEST"],
+        [" FREE TEXT", ""],
         [this.freeTextField0, ""],
         ["", ""],
         [this.freeTextField1, ""],
         ["", ""],
         [this.freeTextField2, ""],
         [
-          PageLinkField.createLink(this, "<RETURN", "/datalink-menu"),
+          PageLinkField.createLink(
+            this,
+            "<REQUEST",
+            "/datalink-extra/inflt-comms",
+          ),
           this.sendButton,
         ],
         ["", ""],
@@ -1495,7 +1613,7 @@ export class DatalinkSpeedPage extends WT21FmcPage {
           nullValueString: "----",
           /** @inheritDoc */
           format(value) {
-            return `${value}[blue]`;
+            return `${value}[green]`;
           },
         },
       }).bind(this.station);
@@ -1504,10 +1622,10 @@ export class DatalinkSpeedPage extends WT21FmcPage {
         this[`freeText${i}`] = Subject.create("");
         this[`freeTextField${i}`] = new TextInputField(this, {
           formatter: {
-            nullValueString: "(----------------------)[blue]",
+            nullValueString: "(----------------------)[green]",
             maxLength: 24,
             format(value) {
-              return value ? `${value}[blue]` : this.nullValueString;
+              return value ? `${value}[green]` : this.nullValueString;
             },
             async parse(input) {
               return input;
@@ -1526,7 +1644,7 @@ export class DatalinkSpeedPage extends WT21FmcPage {
           nullValueString: "SEND",
           /** @inheritDoc */
           format(value) {
-            return `SEND[${value ? "blue" : "white"}]`;
+            return `SEND[${value ? "green" : "white"}]`;
           },
         },
         onSelected: async () => {
@@ -1569,7 +1687,9 @@ export class DatalinkSpeedPage extends WT21FmcPage {
           nullValueString: "----",
           maxLength: 4,
           format: (value) => {
-            return `${this.unit.get() === 1 ? "M" : ""}${value}`;
+            return value
+              ? `${this.unit.get() === 1 ? "M" : ""}${value}[green]`
+              : "----";
           },
           async parse(input) {
             return input;
@@ -1607,26 +1727,37 @@ export class DatalinkSpeedPage extends WT21FmcPage {
   render() {
     return [
       [
-        ["", this.PagingIndicator, "SPEED CLX REQ[blue]"],
-        ["SPEED[blue]", "UNIT[blue]"],
+        ["", this.PagingIndicator, "ATC SPEED REQUEST"],
+        [" SPEED", "UNIT"],
         [this.speedField, this.unitField],
-        ["REASON[blue]", ""],
+        [" DUE TO", ""],
         [this.reasonField, ""],
         ["", ""],
         [this.stationField, this.sendButton],
-        [PageLinkField.createLink(this, "<RETURN", "/datalink-menu"), ""],
+        [
+          PageLinkField.createLink(
+            this,
+            "<REQUEST",
+            "/datalink-extra/inflt-comms",
+          ),
+          "",
+        ],
         ["", ""],
       ],
       [
-        ["", this.PagingIndicator, "SPEED CLX REQ[blue]"],
-        [" REMARKS[blue]", ""],
+        ["", this.PagingIndicator, "ATC SPEED REQUEST"],
+        [" FREE TEXT", ""],
         [this.freeTextField0, ""],
         ["", ""],
         [this.freeTextField1, ""],
         ["", ""],
         [this.freeTextField2, ""],
         [
-          PageLinkField.createLink(this, "<RETURN", "/datalink-menu"),
+          PageLinkField.createLink(
+            this,
+            "<REQUEST",
+            "/datalink-extra/inflt-comms",
+          ),
           this.sendButton,
         ],
         ["", ""],
@@ -1661,7 +1792,7 @@ export class DatalinkLevelPage extends WT21FmcPage {
         nullValueString: "----",
         /** @inheritDoc */
         format(value) {
-          return `${value}[blue]`;
+          return `${value}[green]`;
         },
       },
     }).bind(this.station);
@@ -1674,10 +1805,10 @@ export class DatalinkLevelPage extends WT21FmcPage {
       this[`freeText${i}`] = Subject.create("");
       this[`freeTextField${i}`] = new TextInputField(this, {
         formatter: {
-          nullValueString: "(----------------------)[blue]",
+          nullValueString: "(----------------------)[green]",
           maxLength: 24,
           format(value) {
-            return value ? `${value}[blue]` : this.nullValueString;
+            return value ? `${value}[green]` : this.nullValueString;
           },
           async parse(input) {
             return input;
@@ -1696,7 +1827,7 @@ export class DatalinkLevelPage extends WT21FmcPage {
         nullValueString: "SEND",
         /** @inheritDoc */
         format(value) {
-          return `SEND[${value ? "blue" : "white"}]`;
+          return `SEND[${value ? "green" : "white"}]`;
         },
       },
       onSelected: async () => {
@@ -1736,7 +1867,7 @@ export class DatalinkLevelPage extends WT21FmcPage {
         nullValueString: "---",
         maxLength: 3,
         format(value) {
-          return `FL${value}`;
+          return `FL${value}[blue]`;
         },
         async parse(input) {
           return input;
@@ -1772,26 +1903,387 @@ export class DatalinkLevelPage extends WT21FmcPage {
   render() {
     return [
       [
-        ["", this.PagingIndicator, "LEVEL CLX REQ[blue]"],
-        ["FL[blue]", "DIR[blue]"],
+        ["", this.PagingIndicator, "ATC ALT REQUEST"],
+        [" ALTITUDE", "DIR"],
         [this.levelField, this.unitField],
-        ["REASON[blue]", ""],
+        [" DUE TO", ""],
         [this.reasonField, ""],
         ["", ""],
         [this.stationField, this.sendButton],
-        [PageLinkField.createLink(this, "<RETURN", "/datalink-menu"), ""],
+        [
+          PageLinkField.createLink(
+            this,
+            "<REQUEST",
+            "/datalink-extra/inflt-comms",
+          ),
+          "",
+        ],
         ["", ""],
       ],
       [
-        ["", this.PagingIndicator, "LEVEL CLX REQ[blue]"],
-        [" REMARKS[blue]", ""],
+        ["", this.PagingIndicator, "ATC ALT REQUEST"],
+        [" FREE TEXT", ""],
         [this.freeTextField0, ""],
         ["", ""],
         [this.freeTextField1, ""],
         ["", ""],
         [this.freeTextField2, ""],
         [
-          PageLinkField.createLink(this, "<RETURN", "/datalink-menu"),
+          PageLinkField.createLink(
+            this,
+            "<REQUEST",
+            "/datalink-extra/inflt-comms",
+          ),
+          this.sendButton,
+        ],
+        ["", ""],
+      ],
+    ];
+  }
+}
+
+export class DatalinkPosReportPage extends WT21FmcPage {
+  constructor() {
+    super(...arguments);
+    try {
+      this.bus = this.eventBus;
+      this.distance = Subject.create(null);
+      this.groundSpeed = Subject.create(null);
+
+      this.send = Subject.create(false);
+
+      this.station = Subject.create(null);
+
+      this.speed = Subject.create(
+        `${SimVar.GetSimVarValue("AIRSPEED MACH", "mach").toFixed(1)}`,
+      );
+      this.speedField = new TextInputField(this, {
+        formatter: {
+          nullValueString: ".--",
+          maxLength: 3,
+          format(value) {
+            return `M.${value}[green]`;
+          },
+          async parse(input) {
+            return input;
+          },
+        },
+        onModified: async (scratchpadContents) => {
+          if (scratchpadContents.startsWith("M"))
+            scratchpadContents = scratchpadContents.substr(1);
+          if (Number.isNaN(Number.parseInt(scratchpadContents))) return false;
+          this.speed.set(scratchpadContents);
+          this.checkReady();
+          return true;
+        },
+      }).bind(this.speed);
+      // const fp = this.fms.getPrimaryFlightPlan();
+      // const activeLeg = fp ? fp.getLeg(fp.activeLateralLeg) : null;
+      this.waypoint = Subject.create("");
+      this.waypointField = new TextInputField(this, {
+        formatter: {
+          nullValueString: "-----",
+          maxLength: 5,
+          format(value) {
+            return value ? `${value}[green]` : this.nullValueString;
+          },
+          async parse(input) {
+            return input;
+          },
+        },
+        onModified: async (scratchpadContents) => {
+          this.waypoint.set(scratchpadContents);
+          this.checkReady();
+          return true;
+        },
+      }).bind(this.waypoint);
+      // const activeLeg2 = fp ? fp.getLeg(fp.activeLateralLeg + 1) : null;
+      this.fWaypoint = Subject.create("");
+      this.fWaypointField = new TextInputField(this, {
+        formatter: {
+          nullValueString: "-----",
+          maxLength: 5,
+          format(value) {
+            return value ? `${value}[green]` : this.nullValueString;
+          },
+          async parse(input) {
+            return input;
+          },
+        },
+        onModified: async (scratchpadContents) => {
+          this.fWaypoint.set(scratchpadContents);
+          this.checkReady();
+          return true;
+        },
+      }).bind(this.fWaypoint);
+
+      // const activeLeg3 = fp ? fp.getLeg(fp.activeLateralLeg + 2) : null;
+      this.nWaypoint = Subject.create("");
+      this.nWaypointField = new TextInputField(this, {
+        formatter: {
+          nullValueString: "-----",
+          maxLength: 5,
+          format(value) {
+            return value ? `${value}[green]` : this.nullValueString;
+          },
+          async parse(input) {
+            return input;
+          },
+        },
+        onModified: async (scratchpadContents) => {
+          this.nWaypoint.set(scratchpadContents);
+          this.checkReady();
+          return true;
+        },
+      }).bind(this.nWaypoint);
+
+      this.ata = Subject.create(null);
+      this.ataField = new TextInputField(this, {
+        formatter: {
+          nullValueString: "--:--",
+          maxLength: 5,
+          format(value) {
+            return value
+              ? `${value.substr(0, 2)}:${value.substr(2)}[green]`
+              : this.nullValueString;
+          },
+          async parse(input) {
+            return input.replace("Z", "");
+          },
+        },
+        onModified: async (scratchpadContents) => {
+          if (Number.isNaN(Number.parseInt(scratchpadContents))) return false;
+          this.ata.set(scratchpadContents);
+          this.checkReady();
+          return true;
+        },
+      }).bind(this.ata);
+
+      this.eta = Subject.create(null);
+      this.etaField = new TextInputField(this, {
+        formatter: {
+          nullValueString: "--:--",
+          maxLength: 5,
+          format(value) {
+            return value
+              ? `${value.substr(0, 2)}:${value.substr(2)}[green]`
+              : this.nullValueString;
+          },
+          async parse(input) {
+            return input.replace("Z", "");
+          },
+        },
+        onModified: async (scratchpadContents) => {
+          if (Number.isNaN(Number.parseInt(scratchpadContents))) return false;
+          this.eta.set(scratchpadContents);
+          this.checkReady();
+          return true;
+        },
+      }).bind(this.eta);
+
+      this.bus
+        .getSubscriber()
+        .on("acars_station_status")
+        .handle((message) => {
+          this.station.set(message.active);
+          this.checkReady();
+          this.invalidate();
+        });
+
+      this.stationField = new DisplayField(this, {
+        formatter: {
+          nullValueString: "----",
+          /** @inheritDoc */
+          format(value) {
+            return `${value}[green]`;
+          },
+        },
+      }).bind(this.station);
+
+      fetchAcarsStatus(this.bus).then((res) => {
+        this.station.set(res.active);
+        this.invalidate();
+      });
+      this.value = Subject.create(null);
+      this.levelField = new TextInputField(this, {
+        formatter: {
+          nullValueString: "---",
+          maxLength: 3,
+          format(value) {
+            return `FL${value}[blue]`;
+          },
+          async parse(input) {
+            return input;
+          },
+        },
+        onModified: async (scratchpadContents) => {
+          if (scratchpadContents.startsWith("FL"))
+            scratchpadContents = scratchpadContents.substr(2);
+          if (Number.isNaN(Number.parseInt(scratchpadContents))) return false;
+          this.value.set(scratchpadContents);
+          this.checkReady();
+          return true;
+        },
+      }).bind(this.value);
+
+      this.sendButton = new DisplayField(this, {
+        formatter: {
+          nullValueString: "SEND",
+          /** @inheritDoc */
+          format(value) {
+            return `SEND[${value ? "green" : "white"}]`;
+          },
+        },
+        onSelected: async () => {
+          if (this.send.get()) {
+            this.bus.getPublisher().pub(
+              "acars_message_send",
+              {
+                key: "sendPositionReport",
+                arguments: [
+                  this.value.get(),
+                  this.speed.get(),
+                  this.waypoint.get(),
+                  this.ata.get(),
+                  this.fWaypoint.get(),
+                  this.eta.get(),
+                  this.nWaypoint.get(),
+                ],
+              },
+              true,
+              false,
+            );
+
+            this.checkReady();
+          }
+          return true;
+        },
+      }).bind(this.send);
+      this.distanceSub = this.bus
+        .getSubscriber()
+        .on("lnavdata_waypoint_distance")
+        .handle((v) => {
+          this.distance.set(v);
+          this.updatePosData();
+        });
+      this.speedSub = this.bus
+        .getSubscriber()
+        .on("ground_speed")
+        .handle((v) => {
+          this.groundSpeed.set(v);
+          this.updatePosData();
+        });
+    } catch (err) {
+      console.log(err);
+    }
+  }
+  checkReady() {
+    const array = [
+      this.waypoint,
+      this.fWaypoint,
+      this.nWaypoint,
+      this.ata,
+      this.eta,
+      this.speed,
+      this.value,
+      this.station,
+    ];
+
+    this.send.set(
+      !array.find((e) => {
+        if (!e) return true;
+        const v = e.get();
+        return v === null || (typeof v === "string" ? v.length === 0 : false);
+      }),
+    );
+  }
+  onDestroy() {
+    this.speedSub.destroy();
+    this.distanceSub.destroy();
+  }
+  onPause() {
+    this.speedSub.pause();
+    this.distanceSub.pause();
+  }
+  onResume() {
+    this.speedSub.resume();
+    this.distanceSub.resume();
+  }
+  updatePosData() {
+    const gs = this.groundSpeed.get();
+    const distance = this.distance.get();
+    const fp = this.fms.getPrimaryFlightPlan();
+    if (!gs || !distance || !fp) return;
+
+    {
+      const activeLeg = fp.getLeg(fp.activeLateralLeg);
+      if (activeLeg) this.waypoint.set(activeLeg.name);
+    }
+    {
+      const activeLeg = fp.getLeg(fp.activeLateralLeg + 1);
+      if (activeLeg) this.fWaypoint.set(activeLeg.name);
+    }
+    {
+      const activeLeg = fp.getLeg(fp.activeLateralLeg + 2);
+      if (activeLeg) this.nWaypoint.set(activeLeg.name);
+    }
+
+    {
+      const time = new Date();
+      const rem = 60 * (distance / gs);
+      time.setUTCHours(time.getUTCHours() + Math.floor(rem / 60));
+      time.setUTCMinutes(time.getUTCMinutes() + Math.floor(rem % 60));
+      this.ata.set(
+        `${time.getUTCHours().toString().padStart(2, "0")}${time.getUTCMinutes().toString().padStart(2, "0")}`,
+      );
+    }
+    {
+      const leg = fp.getLeg(fp.activeLateralLeg + 1);
+      if (leg) {
+        const time = new Date();
+        const rem =
+          60 *
+          ((this.distance.get() + leg.calculated.distance / 1852) /
+            this.groundSpeed.get());
+        time.setUTCHours(time.getUTCHours() + Math.floor(rem / 60));
+        time.setUTCMinutes(time.getUTCMinutes() + Math.floor(rem % 60));
+        this.eta.set(
+          `${time.getUTCHours().toString().padStart(2, "0")}${time.getUTCMinutes().toString().padStart(2, "0")}`,
+        );
+      }
+    }
+    {
+      const v = SimVar.GetSimVarValue("INDICATED ALTITUDE", "feet");
+      this.value.set((v / 100).toFixed(0));
+    }
+    this.checkReady();
+  }
+  render() {
+    return [
+      [
+        ["", this.PagingIndicator, "POS REPORT"],
+        [" SPEED", "ALTITUDE "],
+        [this.speedField, this.levelField],
+        ["", ""],
+        ["", ""],
+        ["", ""],
+        [this.stationField, ""],
+        [
+          PageLinkField.createLink(this, "<ATC INDEX", "/datalink-menu"),
+          this.sendButton,
+        ],
+        ["", ""],
+      ],
+      [
+        ["", this.PagingIndicator, "POS REPORT"],
+        [" INBOUND", "ATA "],
+        [this.waypointField, this.ataField],
+        [" NEXT", "ETA "],
+        [this.fWaypointField, this.etaField],
+        [" AFTER", ""],
+        [this.nWaypointField, ""],
+        [
+          PageLinkField.createLink(this, "<ATC INDEX", "/datalink-menu"),
           this.sendButton,
         ],
         ["", ""],

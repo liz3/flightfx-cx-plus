@@ -1,5 +1,10 @@
 import { CasRegistrationManager } from "@microsoft/msfs-sdk";
-import AcarsPage, { AcarsDatalinkPage } from "./AcarsPage.mjs";
+import AcarsPage, {
+  AcarsDatalinkPage,
+  AcarsMessagesPage,
+  AcarsInFlightCommsPage,
+  AcarsClerancesPage,
+} from "./AcarsPage.mjs";
 import acarsService from "./AcarsService.mjs";
 import AcarsSettingsPage from "./AcarsSetting.mjs";
 import CduRenderer from "./CduRenderer.mjs";
@@ -15,10 +20,10 @@ import {
   DatalinkSpeedPage,
   DatalinkStatusPage,
   DatalinkTelexPage,
+  DatalinkPosReportPage,
 } from "./DatalinkPages.mjs";
 import DatalinkPageExtension from "./PageInterceptor.mjs";
 import wt21Shared from "@microsoft/msfs-wt21-shared";
-
 
 let plugin = null;
 class Plugin {
@@ -61,6 +66,34 @@ class Plugin {
     this.fms.router.add(
       "/datalink-extra/recv-msgs",
       DatalinkReceivedMessagesPage,
+      undefined,
+      {},
+    );
+
+    this.fms.router.add(
+      "/datalink-extra/messages",
+      AcarsMessagesPage,
+      undefined,
+      {},
+    );
+
+    this.fms.router.add(
+      "/datalink-extra/inflt-comms",
+      AcarsInFlightCommsPage,
+      undefined,
+      {},
+    );
+
+    this.fms.router.add(
+      "/datalink-extra/posrep",
+      DatalinkPosReportPage,
+      undefined,
+      {},
+    );
+
+    this.fms.router.add(
+      "/datalink-extra/clearance",
+      AcarsClerancesPage,
       undefined,
       {},
     );
@@ -118,9 +151,9 @@ class Plugin {
 
     if (this.fms.instrument.isPrimary)
       this.service = acarsService(this.fms.bus);
-            wt21Shared.FmcUserSettings.getManager(this.eventBus)
-          .getSetting("flightNumber")
-          .set(null);
+    wt21Shared.FmcUserSettings.getManager(this.eventBus)
+      .getSetting("flightNumber")
+      .set(null);
     this.fms.bus.getPublisher().pub(
       "pcas_register",
       {

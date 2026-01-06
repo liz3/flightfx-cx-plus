@@ -171,6 +171,7 @@ const addMessage = (state, content) => {
     content,
     from: state.callsign,
     ts: Date.now(),
+    _id: state.idc++
   });
   return content;
 };
@@ -239,6 +240,7 @@ export const createClient = (
     if (!response.ok) return false;
     const text = await response.text();
     for (const message of parseMessages(text)) {
+      message._id = state.idc++;
       state._callback(message);
     }
     return text.startsWith("ok");

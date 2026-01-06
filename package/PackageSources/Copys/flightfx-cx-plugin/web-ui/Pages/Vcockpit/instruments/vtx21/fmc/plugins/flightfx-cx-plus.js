@@ -48,6 +48,121 @@
   var import_msfs_sdk = __require("@microsoft/msfs-sdk");
   var import_msfs_wt21_fmc = __require("@microsoft/msfs-wt21-fmc");
   var import_msfs_wt21_shared = __toESM(__require("@microsoft/msfs-wt21-shared"), 1);
+  var AcarsMessagesPage = class extends import_msfs_wt21_fmc.WT21FmcPage {
+    constructor(bus, screen, props, fms, baseInstrument, renderCallback) {
+      super(bus, screen, props, fms, baseInstrument, renderCallback);
+      this.backLink = import_msfs_wt21_fmc.PageLinkField.createLink(
+        this,
+        "<ATC INDEX",
+        "/datalink-menu"
+      );
+      this.recvMsgLink = import_msfs_wt21_fmc.PageLinkField.createLink(
+        this,
+        "",
+        "/datalink-extra/recv-msgs"
+      );
+      this.sendMsgLink = import_msfs_wt21_fmc.PageLinkField.createLink(
+        this,
+        "",
+        "/datalink-extra/send-msgs"
+      );
+    }
+    render() {
+      return [
+        [
+          ["", this.PagingIndicator, "ATC LOG"],
+          ["<RECV MSGS", ""],
+          [this.recvMsgLink, ""],
+          ["<SEND MSGS", ""],
+          [this.sendMsgLink, ""],
+          ["", ""],
+          ["", ""],
+          [this.backLink, ""],
+          ["", ""]
+        ]
+      ];
+    }
+  };
+  var AcarsClerancesPage = class extends import_msfs_wt21_fmc.WT21FmcPage {
+    constructor(bus, screen, props, fms, baseInstrument, renderCallback) {
+      super(bus, screen, props, fms, baseInstrument, renderCallback);
+      this.backLink = import_msfs_wt21_fmc.PageLinkField.createLink(
+        this,
+        "<ATC INDEX",
+        "/datalink-menu"
+      );
+      this.predepLink = import_msfs_wt21_fmc.PageLinkField.createLink(
+        this,
+        "",
+        "/datalink-extra/predep"
+      );
+      this.oceanicLink = import_msfs_wt21_fmc.PageLinkField.createLink(
+        this,
+        "",
+        "/datalink-extra/oceanic"
+      );
+    }
+    render() {
+      return [
+        [
+          ["", this.PagingIndicator, "ATC REQUEST"],
+          ["<PRE DEP CLX", ""],
+          [this.predepLink, ""],
+          ["<OCEANIC CLX", ""],
+          [this.oceanicLink, ""],
+          ["", ""],
+          ["", ""],
+          [this.backLink, ""],
+          ["", ""]
+        ]
+      ];
+    }
+  };
+  var AcarsInFlightCommsPage = class extends import_msfs_wt21_fmc.WT21FmcPage {
+    constructor(bus, screen, props, fms, baseInstrument, renderCallback) {
+      super(bus, screen, props, fms, baseInstrument, renderCallback);
+      this.backLink = import_msfs_wt21_fmc.PageLinkField.createLink(
+        this,
+        "<ATC INDEX",
+        "/datalink-menu"
+      );
+      this.levelLink = import_msfs_wt21_fmc.PageLinkField.createLink(
+        this,
+        "",
+        "/datalink-extra/cpdlc/level"
+      );
+      this.directLink = import_msfs_wt21_fmc.PageLinkField.createLink(
+        this,
+        "",
+        "/datalink-extra/cpdlc/direct"
+      );
+      this.speedLink = import_msfs_wt21_fmc.PageLinkField.createLink(
+        this,
+        "",
+        "/datalink-extra/cpdlc/speed"
+      );
+      this.statusLink = import_msfs_wt21_fmc.PageLinkField.createLink(
+        this,
+        "",
+        "/datalink-extra/cpdlc/status"
+      );
+    }
+    render() {
+      return [
+        [
+          ["", this.PagingIndicator, "ATC REQUEST"],
+          ["<SPEED CLX", "LEVEL CLX>"],
+          [this.speedLink, this.levelLink],
+          ["<DIRECT CLX", ""],
+          [this.directLink, ""],
+          ["<STATUS", ""],
+          [this.statusLink, ""],
+          [this.backLink, ""],
+          ["", ""]
+        ]
+      ];
+    }
+  };
   var AcarsDatalinkPage = class extends import_msfs_wt21_fmc.WT21FmcPage {
     constructor(bus, screen, props, fms, baseInstrument, renderCallback) {
       super(bus, screen, props, fms, baseInstrument, renderCallback);
@@ -61,15 +176,20 @@
         "",
         "/datalink-extra/settings"
       );
-      this.recvMsgLink = import_msfs_wt21_fmc.PageLinkField.createLink(
+      this.clearanceLinks = import_msfs_wt21_fmc.PageLinkField.createLink(
         this,
         "",
-        "/datalink-extra/recv-msgs"
+        "/datalink-extra/clearance"
       );
-      this.sendMsgLink = import_msfs_wt21_fmc.PageLinkField.createLink(
+      this.msgsLink = import_msfs_wt21_fmc.PageLinkField.createLink(
+        this,
+        "LOG>",
+        "/datalink-extra/messages"
+      );
+      this.infltComms = import_msfs_wt21_fmc.PageLinkField.createLink(
         this,
         "",
-        "/datalink-extra/send-msgs"
+        "/datalink-extra/inflt-comms"
       );
       this.atisLink = import_msfs_wt21_fmc.PageLinkField.createLink(this, "", "/datalink-extra/atis");
       this.telexLink = import_msfs_wt21_fmc.PageLinkField.createLink(
@@ -79,7 +199,7 @@
       );
       this.statusLink = import_msfs_wt21_fmc.PageLinkField.createLink(
         this,
-        "",
+        "<LOGON/STATUS",
         "/datalink-extra/cpdlc/status"
       );
       this.predepLink = import_msfs_wt21_fmc.PageLinkField.createLink(
@@ -107,29 +227,34 @@
         "",
         "/datalink-extra/cpdlc/speed"
       );
+      this.posRepLink = import_msfs_wt21_fmc.PageLinkField.createLink(
+        this,
+        "",
+        "/datalink-extra/posrep"
+      );
     }
     render() {
       return [
         [
-          ["", this.PagingIndicator, "DL MENU"],
-          ["<RECV MSGS", "ATIS>"],
-          [this.recvMsgLink, this.atisLink],
-          ["<SEND MSGS", "TELEX>"],
-          [this.sendMsgLink, this.telexLink],
-          ["<STATUS", ""],
-          [this.statusLink],
-          [this.backLink, ""],
+          ["", this.PagingIndicator, "ATC INDEX"],
+          ["", "POS REPORT>"],
+          ["", this.posRepLink],
+          ["<REQUEST", "WHEN CAN WE>"],
+          [this.infltComms, ""],
+          ["<WX REPORT", ""],
+          [this.atisLink, ""],
+          [this.statusLink, this.msgsLink],
           ["", ""]
         ],
         [
-          ["", this.PagingIndicator, "DL MENU"],
-          ["<PRE DEP CLX", "LEVEL CLX>"],
-          [this.predepLink, this.levelLink],
-          ["<OCEANIC CLX", "DIRECT CLX>"],
-          [this.oceanicLink, this.directLink],
-          ["<SPEED CLX", ""],
-          [this.speedLink, ""],
-          [this.backLink, ""],
+          ["", this.PagingIndicator, "ATC INDEX"],
+          ["<FREE TEXT", ""],
+          [this.telexLink, ""],
+          ["<CLEARANCE", ""],
+          [this.clearanceLinks, ""],
+          ["", ""],
+          ["", ""],
+          ["", ""],
           ["", ""]
         ]
       ];
@@ -173,7 +298,7 @@
       return [
         [
           ["", "1/1[page-number-text]", "ACARS"],
-          ["<DATALINK", ""],
+          ["<ATC INDEX", ""],
           [this.datalinkLink, ""],
           ["", "CALLSIGN "],
           ["", this.callsignField],
@@ -335,7 +460,8 @@
       type: "send",
       content,
       from: state.callsign,
-      ts: Date.now()
+      ts: Date.now(),
+      _id: state.idc++
     });
     return content;
   };
@@ -389,6 +515,7 @@
       if (!response.ok) return false;
       const text = await response.text();
       for (const message of parseMessages(text)) {
+        message._id = state.idc++;
         state._callback(message);
       }
       return text.startsWith("ok");
@@ -543,6 +670,9 @@ ${content}`,
       bus.getPublisher().pub(`acars_status_req`, null, true, false);
     });
   };
+  var deleteMessage = (bus, id) => {
+    bus.getPublisher().pub(`acars_del_msg`, id, true, false);
+  };
   var acarsService = (bus) => {
     const publisher = bus.getPublisher();
     bus.getSubscriber().on("acars_message_send").handle((v) => {
@@ -587,6 +717,16 @@ ${content}`,
           active: acars.client ? acars.client.active_station : null,
           pending: acars.client ? acars.client.pending_station : null
         },
+        true,
+        false
+      );
+      return true;
+    });
+    bus.getSubscriber().on("acars_del_msg").handle((v) => {
+      acars.messages = acars.messages.filter((e) => e._id !== v);
+      publisher.pub(
+        "acars_message_removal",
+        v,
         true,
         false
       );
@@ -987,6 +1127,14 @@ ${content}`,
         this.messages.set(current);
         this.invalidate();
       });
+      this.bus.getSubscriber().on("acars_message_removal").handle((idv) => {
+        const current = this.messages.get();
+        for (let i = 0; i < current.length; i += 1) {
+          current[i] = current[i].filter((e) => e.message._id !== idv);
+        }
+        this.messages.set(current);
+        this.invalidate();
+      });
       fetchAcarsMessages(this.bus, "send").then((messages) => {
         for (const message of messages) {
           const current = this.messages.get();
@@ -1017,11 +1165,11 @@ ${content}`,
         const array = Array(6).fill().map((e) => ["", ""]);
         page.forEach((val, index) => {
           const nn = index * 2;
-          array[nn] = [`${convertUnixToHHMM(val.message.ts)}[blue]`, ""];
-          array[nn + 1] = [val.link, ""];
+          array[nn] = [`${convertUnixToHHMM(val.message.ts)}[green]`, ""];
+          array[nn + 1] = [val.link];
         });
         return [
-          ["", this.PagingIndicator, "SEND MSGS[blue]"],
+          ["", this.PagingIndicator, "SEND MSGS[green]"],
           ...array,
           [import_msfs_wt21_fmc3.PageLinkField.createLink(this, "<RETURN", "/datalink-menu"), ""],
           []
@@ -1034,6 +1182,14 @@ ${content}`,
       super(...arguments);
       this.messages = import_msfs_sdk3.Subject.create([[]]);
       this.bus = this.eventBus;
+      this.bus.getSubscriber().on("acars_message_removal").handle((idv) => {
+        const current = this.messages.get();
+        for (let i = 0; i < current.length; i += 1) {
+          current[i] = current[i].filter((e) => e.message._id !== idv);
+        }
+        this.messages.set(current);
+        this.invalidate();
+      });
       this.bus.getSubscriber().on("acars_incoming_message").handle((message) => {
         const current = this.messages.get();
         const entry = {
@@ -1097,11 +1253,11 @@ ${content}`,
         const array = Array(6).fill().map((e) => ["", ""]);
         page.forEach((val, index) => {
           const nn = index * 2;
-          array[nn] = [`${convertUnixToHHMM(val.message.ts)}[blue]`, ""];
-          array[nn + 1] = [val.link, ""];
+          array[nn] = [`${convertUnixToHHMM(val.message.ts)}[green]`, ""];
+          array[nn + 1] = [val.link];
         });
         return [
-          ["", this.PagingIndicator, "RCVD MSGS[blue]"],
+          ["", this.PagingIndicator, "RCVD MSGS[green]"],
           ...array,
           [import_msfs_wt21_fmc3.PageLinkField.createLink(this, "<RETURN", "/datalink-menu"), ""],
           []
@@ -1125,6 +1281,24 @@ ${content}`,
           this.invalidate();
         }
       });
+      this.deleteField = new import_msfs_wt21_fmc3.DisplayField(this, {
+        formatter: {
+          nullValueString: "DEL>",
+          format: (value) => {
+            return "DEL>";
+          }
+        },
+        onSelected: async () => {
+          const message = this.router.params["message"];
+          if (message) {
+            this.router.navigateTo(
+              `/datalink-extra/${message.type === "send" ? "send-msgs" : "recv-msgs"}`
+            );
+            deleteMessage(this.bus, message._id);
+          }
+          return true;
+        }
+      });
       for (let i = 0; i < 3; i++) {
         this.optionSubjects.push(import_msfs_sdk3.Subject.create());
         this.msgOpts.push(
@@ -1136,7 +1310,7 @@ ${content}`,
                 if (message.respondSend) {
                   return value === message.respondSend ? value : null;
                 }
-                return i === 0 ? `<${value}[blue]` : `${value}>[blue]`;
+                return i === 0 ? `<${value}[green]` : `${value}>[green]`;
               }
             },
             onSelected: async () => {
@@ -1221,9 +1395,9 @@ ${content}`,
           [
             "",
             this.PagingIndicator,
-            `${message.type === "send" ? "SEND" : "RECV"} MSG[blue]`
+            `${message.type === "send" ? "SEND" : "RECV"} MSG[green]`
           ],
-          [`${convertUnixToHHMM(message.ts)}[blue]`, ""],
+          [`${convertUnixToHHMM(message.ts)}[green]`, ""],
           ...page,
           [
             import_msfs_wt21_fmc3.PageLinkField.createLink(
@@ -1231,7 +1405,7 @@ ${content}`,
               "<RETURN",
               `/datalink-extra/${message.type === "send" ? "send-msgs" : "recv-msgs"}`
             ),
-            ""
+            this.deleteField
           ],
           ["", ""]
         ];
@@ -1241,9 +1415,9 @@ ${content}`,
           [
             "",
             this.PagingIndicator,
-            `${message.type === "send" ? "SEND" : "RECV"} MSG[blue]`
+            `${message.type === "send" ? "SEND" : "RECV"} MSG[green]`
           ],
-          [`${convertUnixToHHMM(message.ts)}[blue]`, ""],
+          [`${convertUnixToHHMM(message.ts)}[green]`, ""],
           [message.from, ""],
           ["", ""],
           [this.msgOpts[0], this.msgOpts[1]],
@@ -1305,7 +1479,7 @@ ${content}`,
           nullValueString: "----",
           maxLength: 4,
           format(value) {
-            return value ? `${value}[blue]` : this.nullValueString;
+            return value ? `${value}[green]` : this.nullValueString;
           },
           async parse(input) {
             return input;
@@ -1324,14 +1498,14 @@ ${content}`,
     render() {
       return [
         [
-          ["ATIS REQ[blue]"],
-          ["FACILITY[blue]"],
+          ["ATC WX REPORT"],
+          [" FACILITY"],
           [this.facilityField],
-          ["TYPE[blue]", ""],
+          [" TYPE", ""],
           [this.typeSwitch, ""],
           ["", ""],
           ["", this.sendButton],
-          [import_msfs_wt21_fmc3.PageLinkField.createLink(this, "<RETURN", "/datalink-menu"), ""],
+          [import_msfs_wt21_fmc3.PageLinkField.createLink(this, "<ATC INDEX", "/datalink-menu"), ""],
           ["", ""]
         ]
       ];
@@ -1353,10 +1527,10 @@ ${content}`,
         this[`freeText${i}`] = import_msfs_sdk3.Subject.create("");
         this[`freeTextField${i}`] = new import_msfs_wt21_fmc3.TextInputField(this, {
           formatter: {
-            nullValueString: "(----------------------)[blue]",
+            nullValueString: "(----------------------)[green]",
             maxLength: 24,
             format(value) {
-              return value ? `${value}[blue]` : this.nullValueString;
+              return value ? `${value}[green]` : this.nullValueString;
             },
             async parse(input) {
               return input;
@@ -1409,7 +1583,7 @@ ${content}`,
           nullValueString: "-------",
           maxLength: 7,
           format(value) {
-            return value ? `${value}[blue]` : this.nullValueString;
+            return value ? `${value}[green]` : this.nullValueString;
           },
           async parse(input) {
             return input;
@@ -1426,7 +1600,7 @@ ${content}`,
           nullValueString: "-------",
           maxLength: 7,
           format(value) {
-            return value ? `${value}[blue]` : this.nullValueString;
+            return value ? `${value}[green]` : this.nullValueString;
           },
           async parse(input) {
             return input;
@@ -1443,7 +1617,7 @@ ${content}`,
           nullValueString: "----",
           maxLength: 4,
           format(value) {
-            return value ? `${value}[blue]` : this.nullValueString;
+            return value ? `${value}[green]` : this.nullValueString;
           },
           async parse(input) {
             return input;
@@ -1459,7 +1633,7 @@ ${content}`,
           nullValueString: "-",
           maxLength: 1,
           format(value) {
-            return value ? `${value}[blue]` : this.nullValueString;
+            return value ? `${value}[green]` : this.nullValueString;
           },
           async parse(input) {
             return input;
@@ -1476,7 +1650,7 @@ ${content}`,
           nullValueString: "----",
           maxLength: 4,
           format(value) {
-            return value ? `${value}[blue]` : this.nullValueString;
+            return value ? `${value}[green]` : this.nullValueString;
           },
           async parse(input) {
             return input;
@@ -1493,7 +1667,7 @@ ${content}`,
           nullValueString: "----",
           maxLength: 4,
           format(value) {
-            return value ? `${value}[blue]` : this.nullValueString;
+            return value ? `${value}[green]` : this.nullValueString;
           },
           async parse(input) {
             return input;
@@ -1510,7 +1684,7 @@ ${content}`,
           nullValueString: "-----",
           maxLength: 7,
           format(value) {
-            return value ? `${value}[blue]` : this.nullValueString;
+            return value ? `${value}[green]` : this.nullValueString;
           },
           async parse(input) {
             return input;
@@ -1581,19 +1755,19 @@ ${content}`,
     render() {
       return [
         [
-          ["", this.PagingIndicator, "DEPART CLX REQ[blue]"],
-          ["ATS FLT ID[blue]", "FACILITY[blue]"],
+          ["", this.PagingIndicator, "DEPART CLX REQ[green]"],
+          ["ATS FLT ID[green]", "FACILITY[green]"],
           [this.flightIdField, this.facilityField],
-          ["A/C TYPE[blue]", "ATIS[blue]"],
+          ["A/C TYPE[green]", "ATIS[green]"],
           [this.acTypeField, this.atisField],
-          ["ORIG STA[blue]", "DEST STA[blue]"],
+          ["ORIG STA[green]", "DEST STA[green]"],
           [this.depField, this.arrField],
           [import_msfs_wt21_fmc3.PageLinkField.createLink(this, "<RETURN", "/datalink-menu"), ""],
           ["", ""]
         ],
         [
-          ["", this.PagingIndicator, "DEPART CLX REQ[blue]"],
-          ["GATE[blue]", ""],
+          ["", this.PagingIndicator, "DEPART CLX REQ[green]"],
+          ["GATE[green]", ""],
           [this.gateField, ""],
           ["", ""],
           ["", ""],
@@ -1603,8 +1777,8 @@ ${content}`,
           ["", ""]
         ],
         [
-          ["", this.PagingIndicator, "DEPART CLX REQ[blue]"],
-          [" REMARKS[blue]", ""],
+          ["", this.PagingIndicator, "DEPART CLX REQ[green]"],
+          [" REMARKS[green]", ""],
           [this.freeTextField0, ""],
           ["", ""],
           [this.freeTextField1, ""],
@@ -1634,10 +1808,10 @@ ${content}`,
         this[`freeText${i}`] = import_msfs_sdk3.Subject.create("");
         this[`freeTextField${i}`] = new import_msfs_wt21_fmc3.TextInputField(this, {
           formatter: {
-            nullValueString: "(----------------------)[blue]",
+            nullValueString: "(----------------------)[green]",
             maxLength: 24,
             format(value) {
-              return value ? `${value}[blue]` : this.nullValueString;
+              return value ? `${value}[green]` : this.nullValueString;
             },
             async parse(input) {
               return input;
@@ -1696,7 +1870,7 @@ ${content}`,
           nullValueString: "-------",
           maxLength: 7,
           format(value) {
-            return value ? `${value}[blue]` : this.nullValueString;
+            return value ? `${value}[green]` : this.nullValueString;
           },
           async parse(input) {
             return input;
@@ -1713,7 +1887,7 @@ ${content}`,
           nullValueString: "-----------",
           maxLength: 11,
           format(value) {
-            return value ? `${value}[blue]` : this.nullValueString;
+            return value ? `${value}[green]` : this.nullValueString;
           },
           async parse(input) {
             return input;
@@ -1730,7 +1904,7 @@ ${content}`,
           nullValueString: "-----------",
           maxLength: 11,
           format(value) {
-            return value ? `${value}[blue]` : this.nullValueString;
+            return value ? `${value}[green]` : this.nullValueString;
           },
           async parse(input) {
             return input;
@@ -1747,7 +1921,7 @@ ${content}`,
           nullValueString: "--:--",
           maxLength: 11,
           format(value) {
-            return value ? `${value}[blue]` : this.nullValueString;
+            return value ? `${value}[green]` : this.nullValueString;
           },
           async parse(input) {
             return input;
@@ -1769,7 +1943,7 @@ ${content}`,
           nullValueString: ".--",
           maxLength: 3,
           format(value) {
-            return value ? `${value}[blue]` : this.nullValueString;
+            return value ? `${value}[green]` : this.nullValueString;
           },
           async parse(input) {
             return input;
@@ -1789,7 +1963,7 @@ ${content}`,
           nullValueString: "---",
           maxLength: 5,
           format(value) {
-            return value ? `FL${value}[blue]` : this.nullValueString;
+            return value ? `FL${value}[green]` : this.nullValueString;
           },
           async parse(input) {
             return input.startsWith("FL") ? input.substr(2) : input;
@@ -1832,12 +2006,12 @@ ${content}`,
     render() {
       return [
         [
-          ["", this.PagingIndicator, "OCEANIC CLX RQ[blue]"],
-          ["ATS FLT ID[blue]", "FACILITY[blue]"],
+          ["", this.PagingIndicator, "OCEANIC CLX RQ[green]"],
+          ["ATS FLT ID[green]", "FACILITY[green]"],
           [this.flightIdField, this.facilityField],
-          ["ENRTY POINT[blue]", "AT TIME[blue]"],
+          ["ENRTY POINT[green]", "AT TIME[green]"],
           [this.entryPointField, this.timeField],
-          ["MACH[blue]", "FLT LEVEL[blue]"],
+          ["MACH[green]", "FLT LEVEL[green]"],
           [this.machField, this.fltLvlField],
           [
             import_msfs_wt21_fmc3.PageLinkField.createLink(this, "<RETURN", "/datalink-menu"),
@@ -1846,8 +2020,8 @@ ${content}`,
           ["", ""]
         ],
         [
-          ["", this.PagingIndicator, "OCEANIC CLX REQ[blue]"],
-          [" REMARKS[blue]", ""],
+          ["", this.PagingIndicator, "OCEANIC CLX REQ[green]"],
+          [" REMARKS[green]", ""],
           [this.freeTextField0, ""],
           ["", ""],
           [this.freeTextField1, ""],
@@ -1873,10 +2047,10 @@ ${content}`,
           this[`freeText${i}`] = import_msfs_sdk3.Subject.create("");
           this[`freeTextField${i}`] = new import_msfs_wt21_fmc3.TextInputField(this, {
             formatter: {
-              nullValueString: "(----------------------)[blue]",
+              nullValueString: "(----------------------)[green]",
               maxLength: 24,
               format(value) {
-                return value ? `${value}[blue]` : this.nullValueString;
+                return value ? `${value}[green]` : this.nullValueString;
               },
               async parse(input) {
                 return input;
@@ -1894,7 +2068,7 @@ ${content}`,
             nullValueString: "SEND",
             /** @inheritDoc */
             format(value) {
-              return `SEND[${value ? "blue" : "white"}]`;
+              return `SEND[${value ? "green" : "white"}]`;
             }
           },
           onSelected: async () => {
@@ -1921,7 +2095,7 @@ ${content}`,
             nullValueString: "-------",
             maxLength: 7,
             format(value) {
-              return value ? `${value}[blue]` : this.nullValueString;
+              return value ? `${value}[green]` : this.nullValueString;
             },
             async parse(input) {
               return input;
@@ -1950,29 +2124,29 @@ ${content}`,
     render() {
       return [
         [
-          ["", this.PagingIndicator, "TELEX[blue]"],
-          ["FACILITY[blue]", ""],
+          ["", this.PagingIndicator, "FREE TEXT"],
+          ["TO[green]", ""],
           [this.facilityField, ""],
-          [" REMARKS[blue]", ""],
+          [" FREE TEXT", ""],
           [this.freeTextField0, ""],
           ["", ""],
           [this.freeTextField1, ""],
           [
-            import_msfs_wt21_fmc3.PageLinkField.createLink(this, "<RETURN", "/datalink-menu"),
+            import_msfs_wt21_fmc3.PageLinkField.createLink(this, "<ATC INDEX", "/datalink-menu"),
             this.sendButton
           ],
           ["", ""]
         ],
         [
-          ["", this.PagingIndicator, "TELEX[blue]"],
-          [" REMARKS[blue]", ""],
+          ["", this.PagingIndicator, "FREE TEXT"],
+          [" FREE TEXT", ""],
           [this.freeTextField2, ""],
           ["", ""],
           [this.freeTextField3, ""],
           ["", ""],
           [this.freeTextField4, ""],
           [
-            import_msfs_wt21_fmc3.PageLinkField.createLink(this, "<RETURN", "/datalink-menu"),
+            import_msfs_wt21_fmc3.PageLinkField.createLink(this, "<ATC INDEX", "/datalink-menu"),
             this.sendButton
           ],
           ["", ""]
@@ -1985,16 +2159,21 @@ ${content}`,
       try {
         super(...arguments);
         this.facility = import_msfs_sdk3.Subject.create("");
+        this.nextFacility = import_msfs_sdk3.Subject.create("");
         this.send = import_msfs_sdk3.Subject.create("NOTIFY");
         this.status = import_msfs_sdk3.Subject.create(null);
         this.activeStation = import_msfs_sdk3.Subject.create("");
         this.bus = this.eventBus;
+        this.tailNo = import_msfs_sdk3.Subject.create(SimVar.GetSimVarValue("ATC ID", "string"));
+        this.callsign = import_msfs_sdk3.Subject.create(
+          import_msfs_wt21_shared3.default.FmcUserSettings.getManager(this.eventBus).getSetting("flightNumber").get()
+        );
         this.facilityField = new import_msfs_wt21_fmc3.TextInputField(this, {
           formatter: {
             nullValueString: "------",
             maxLength: 11,
             format(value) {
-              return value ? `${value}[blue]` : this.nullValueString;
+              return value ? `${value}[green]` : this.nullValueString;
             },
             async parse(input) {
               return input;
@@ -2005,19 +2184,38 @@ ${content}`,
             return true;
           },
           onDelete: () => {
-            if (this.activeStation.get())
-              return false;
+            if (this.activeStation.get()) return false;
             this.send.set("NOTIFY");
             this.facility.set("");
             return true;
           }
         }).bind(this.facility);
+        this.tailField = new import_msfs_wt21_fmc3.TextInputField(this, {
+          formatter: {
+            nullValueString: "------",
+            maxLength: 7,
+            format(value) {
+              return value ? `${value}[blue]` : this.nullValueString;
+            },
+            async parse(input) {
+              return input;
+            }
+          },
+          onModified: async (scratchpadContents) => {
+            this.tailNo.set(scratchpadContents);
+            return true;
+          },
+          onDelete: () => {
+            this.tailNo.set(null);
+            return true;
+          }
+        }).bind(this.tailNo);
         this.sendButton = new import_msfs_wt21_fmc3.DisplayField(this, {
           formatter: {
             nullValueString: "",
             /** @inheritDoc */
             format(value) {
-              return `<${value}[blue]`;
+              return `${value}>[green]`;
             }
           },
           onSelected: async () => {
@@ -2055,15 +2253,46 @@ ${content}`,
             }
           }
         }).bind(this.status);
+        this.nextField = new import_msfs_wt21_fmc3.DisplayField(this, {
+          formatter: {
+            nullValueString: "",
+            /** @inheritDoc */
+            format(value) {
+              return value;
+            }
+          }
+        }).bind(this.nextFacility);
+        this.callsignField = new import_msfs_wt21_fmc3.TextInputField(this, {
+          formatter: {
+            nullValueString: "-------",
+            maxLength: 7,
+            format(value) {
+              return value ? `${value}[green]` : this.nullValueString;
+            },
+            async parse(input) {
+              return input;
+            }
+          },
+          onModified: async (scratchpadContents) => {
+            import_msfs_wt21_shared3.default.FmcUserSettings.getManager(this.eventBus).getSetting("flightNumber").set(scratchpadContents);
+            return true;
+          },
+          onDelete: () => {
+            import_msfs_wt21_shared3.default.FmcUserSettings.getManager(this.eventBus).getSetting("flightNumber").set(null);
+          }
+        }).bind(this.callsign);
+        import_msfs_wt21_shared3.default.FmcUserSettings.getManager(this.eventBus).getSetting("flightNumber").sub((v) => this.callsign.set(v));
         this.bus.getSubscriber().on("acars_station_status").handle((message) => {
           if (message.active) {
             this.status.set(`${message.active}[green]`);
+            this.nextFacility.set("");
             this.activeStation.set(true);
             this.send.set("LOGOFF");
             this.facility.set("");
           } else {
             if (message.pending) {
-              this.status.set(`${message.pending} NOTIFIED[green]`);
+              this.nextFacility.set(`${message.pending}[green]`);
+              this.status.set(``);
               this.send.set("NOTIFY AGAIN");
             } else {
               this.send.set("NOTIFY");
@@ -2080,14 +2309,17 @@ ${content}`,
     render() {
       return [
         [
-          ["", "", "STATUS[blue]"],
-          ["FACILITY[blue]", ""],
+          ["", "", "ATC LOGON/STATUS"],
+          [" LOGON TO", ""],
           [this.facilityField, ""],
-          ["STATUS[blue]", ""],
-          [this.statusField, ""],
-          ["", ""],
-          [this.sendButton, ""],
-          [import_msfs_wt21_fmc3.PageLinkField.createLink(this, "<RETURN", "/datalink-menu"), ""],
+          [" FLT ID", "ACT CTR "],
+          [this.callsignField, this.statusField],
+          [" TAIL NO", "NEXT CTR "],
+          [this.tailField, this.nextField],
+          [
+            import_msfs_wt21_fmc3.PageLinkField.createLink(this, "<ATC INDEX", "/datalink-menu"),
+            this.sendButton
+          ],
           ["", ""]
         ]
       ];
@@ -2112,7 +2344,7 @@ ${content}`,
           nullValueString: "----",
           /** @inheritDoc */
           format(value) {
-            return `${value}[blue]`;
+            return `${value}[green]`;
           }
         }
       }).bind(this.station);
@@ -2120,7 +2352,7 @@ ${content}`,
         this[`freeText${i}`] = import_msfs_sdk3.Subject.create("");
         this[`freeTextField${i}`] = new import_msfs_sdk3.default.TextInputField(this, {
           formatter: {
-            nullValueString: "(----------------------)[blue]",
+            nullValueString: "(----------------------)[green]",
             maxLength: 24
           },
           onSelected: async (scratchpadContents) => {
@@ -2139,7 +2371,7 @@ ${content}`,
           nullValueString: "SEND",
           /** @inheritDoc */
           format(value) {
-            return `SEND[${value ? "blue" : "white"}]`;
+            return `SEND[${value ? "green" : "white"}]`;
           }
         },
         onSelected: async () => {
@@ -2170,7 +2402,7 @@ ${content}`,
           nullValueString: "-----",
           maxLength: 5,
           format(value) {
-            return value ? `${value}[blue]` : this.nullValueString;
+            return value ? `${value}[green]` : this.nullValueString;
           },
           async parse(input) {
             return input;
@@ -2199,26 +2431,37 @@ ${content}`,
     render() {
       return [
         [
-          ["", this.PagingIndicator, "DIRECT CLX REQ[blue]"],
-          ["WAYPOINT[blue]", ""],
+          ["", this.PagingIndicator, "ATC DIRECT REQUEST"],
+          [" WAYPOINT", ""],
           [this.facilityField, ""],
-          ["REASON[blue]", ""],
+          [" DUE TO", ""],
           [this.reasonField, ""],
           ["", ""],
           [this.stationField, this.sendButton],
-          [import_msfs_wt21_fmc3.PageLinkField.createLink(this, "<RETURN", "/datalink-menu"), ""],
+          [
+            import_msfs_wt21_fmc3.PageLinkField.createLink(
+              this,
+              "<REQUEST",
+              "/datalink-extra/inflt-comms"
+            ),
+            ""
+          ],
           ["", ""]
         ],
         [
-          ["", this.PagingIndicator, "DIRECT CLX REQ[blue]"],
-          [" REMARKS[blue]", ""],
+          ["", this.PagingIndicator, "ATC DIRECT REQUEST"],
+          [" FREE TEXT", ""],
           [this.freeTextField0, ""],
           ["", ""],
           [this.freeTextField1, ""],
           ["", ""],
           [this.freeTextField2, ""],
           [
-            import_msfs_wt21_fmc3.PageLinkField.createLink(this, "<RETURN", "/datalink-menu"),
+            import_msfs_wt21_fmc3.PageLinkField.createLink(
+              this,
+              "<REQUEST",
+              "/datalink-extra/inflt-comms"
+            ),
             this.sendButton
           ],
           ["", ""]
@@ -2248,7 +2491,7 @@ ${content}`,
             nullValueString: "----",
             /** @inheritDoc */
             format(value) {
-              return `${value}[blue]`;
+              return `${value}[green]`;
             }
           }
         }).bind(this.station);
@@ -2256,10 +2499,10 @@ ${content}`,
           this[`freeText${i}`] = import_msfs_sdk3.Subject.create("");
           this[`freeTextField${i}`] = new import_msfs_wt21_fmc3.TextInputField(this, {
             formatter: {
-              nullValueString: "(----------------------)[blue]",
+              nullValueString: "(----------------------)[green]",
               maxLength: 24,
               format(value) {
-                return value ? `${value}[blue]` : this.nullValueString;
+                return value ? `${value}[green]` : this.nullValueString;
               },
               async parse(input) {
                 return input;
@@ -2277,7 +2520,7 @@ ${content}`,
             nullValueString: "SEND",
             /** @inheritDoc */
             format(value) {
-              return `SEND[${value ? "blue" : "white"}]`;
+              return `SEND[${value ? "green" : "white"}]`;
             }
           },
           onSelected: async () => {
@@ -2313,7 +2556,7 @@ ${content}`,
             nullValueString: "----",
             maxLength: 4,
             format: (value) => {
-              return `${this.unit.get() === 1 ? "M" : ""}${value}`;
+              return value ? `${this.unit.get() === 1 ? "M" : ""}${value}[green]` : "----";
             },
             async parse(input) {
               return input;
@@ -2351,26 +2594,37 @@ ${content}`,
     render() {
       return [
         [
-          ["", this.PagingIndicator, "SPEED CLX REQ[blue]"],
-          ["SPEED[blue]", "UNIT[blue]"],
+          ["", this.PagingIndicator, "ATC SPEED REQUEST"],
+          [" SPEED", "UNIT"],
           [this.speedField, this.unitField],
-          ["REASON[blue]", ""],
+          [" DUE TO", ""],
           [this.reasonField, ""],
           ["", ""],
           [this.stationField, this.sendButton],
-          [import_msfs_wt21_fmc3.PageLinkField.createLink(this, "<RETURN", "/datalink-menu"), ""],
+          [
+            import_msfs_wt21_fmc3.PageLinkField.createLink(
+              this,
+              "<REQUEST",
+              "/datalink-extra/inflt-comms"
+            ),
+            ""
+          ],
           ["", ""]
         ],
         [
-          ["", this.PagingIndicator, "SPEED CLX REQ[blue]"],
-          [" REMARKS[blue]", ""],
+          ["", this.PagingIndicator, "ATC SPEED REQUEST"],
+          [" FREE TEXT", ""],
           [this.freeTextField0, ""],
           ["", ""],
           [this.freeTextField1, ""],
           ["", ""],
           [this.freeTextField2, ""],
           [
-            import_msfs_wt21_fmc3.PageLinkField.createLink(this, "<RETURN", "/datalink-menu"),
+            import_msfs_wt21_fmc3.PageLinkField.createLink(
+              this,
+              "<REQUEST",
+              "/datalink-extra/inflt-comms"
+            ),
             this.sendButton
           ],
           ["", ""]
@@ -2399,7 +2653,7 @@ ${content}`,
           nullValueString: "----",
           /** @inheritDoc */
           format(value) {
-            return `${value}[blue]`;
+            return `${value}[green]`;
           }
         }
       }).bind(this.station);
@@ -2411,10 +2665,10 @@ ${content}`,
         this[`freeText${i}`] = import_msfs_sdk3.Subject.create("");
         this[`freeTextField${i}`] = new import_msfs_wt21_fmc3.TextInputField(this, {
           formatter: {
-            nullValueString: "(----------------------)[blue]",
+            nullValueString: "(----------------------)[green]",
             maxLength: 24,
             format(value) {
-              return value ? `${value}[blue]` : this.nullValueString;
+              return value ? `${value}[green]` : this.nullValueString;
             },
             async parse(input) {
               return input;
@@ -2432,7 +2686,7 @@ ${content}`,
           nullValueString: "SEND",
           /** @inheritDoc */
           format(value) {
-            return `SEND[${value ? "blue" : "white"}]`;
+            return `SEND[${value ? "green" : "white"}]`;
           }
         },
         onSelected: async () => {
@@ -2464,7 +2718,7 @@ ${content}`,
           nullValueString: "---",
           maxLength: 3,
           format(value) {
-            return `FL${value}`;
+            return `FL${value}[blue]`;
           },
           async parse(input) {
             return input;
@@ -2500,26 +2754,352 @@ ${content}`,
     render() {
       return [
         [
-          ["", this.PagingIndicator, "LEVEL CLX REQ[blue]"],
-          ["FL[blue]", "DIR[blue]"],
+          ["", this.PagingIndicator, "ATC ALT REQUEST"],
+          [" ALTITUDE", "DIR"],
           [this.levelField, this.unitField],
-          ["REASON[blue]", ""],
+          [" DUE TO", ""],
           [this.reasonField, ""],
           ["", ""],
           [this.stationField, this.sendButton],
-          [import_msfs_wt21_fmc3.PageLinkField.createLink(this, "<RETURN", "/datalink-menu"), ""],
+          [
+            import_msfs_wt21_fmc3.PageLinkField.createLink(
+              this,
+              "<REQUEST",
+              "/datalink-extra/inflt-comms"
+            ),
+            ""
+          ],
           ["", ""]
         ],
         [
-          ["", this.PagingIndicator, "LEVEL CLX REQ[blue]"],
-          [" REMARKS[blue]", ""],
+          ["", this.PagingIndicator, "ATC ALT REQUEST"],
+          [" FREE TEXT", ""],
           [this.freeTextField0, ""],
           ["", ""],
           [this.freeTextField1, ""],
           ["", ""],
           [this.freeTextField2, ""],
           [
-            import_msfs_wt21_fmc3.PageLinkField.createLink(this, "<RETURN", "/datalink-menu"),
+            import_msfs_wt21_fmc3.PageLinkField.createLink(
+              this,
+              "<REQUEST",
+              "/datalink-extra/inflt-comms"
+            ),
+            this.sendButton
+          ],
+          ["", ""]
+        ]
+      ];
+    }
+  };
+  var DatalinkPosReportPage = class extends import_msfs_wt21_fmc3.WT21FmcPage {
+    constructor() {
+      super(...arguments);
+      try {
+        this.bus = this.eventBus;
+        this.distance = import_msfs_sdk3.Subject.create(null);
+        this.groundSpeed = import_msfs_sdk3.Subject.create(null);
+        this.send = import_msfs_sdk3.Subject.create(false);
+        this.station = import_msfs_sdk3.Subject.create(null);
+        this.speed = import_msfs_sdk3.Subject.create(
+          `${SimVar.GetSimVarValue("AIRSPEED MACH", "mach").toFixed(1)}`
+        );
+        this.speedField = new import_msfs_wt21_fmc3.TextInputField(this, {
+          formatter: {
+            nullValueString: ".--",
+            maxLength: 3,
+            format(value) {
+              return `M.${value}[green]`;
+            },
+            async parse(input) {
+              return input;
+            }
+          },
+          onModified: async (scratchpadContents) => {
+            if (scratchpadContents.startsWith("M"))
+              scratchpadContents = scratchpadContents.substr(1);
+            if (Number.isNaN(Number.parseInt(scratchpadContents))) return false;
+            this.speed.set(scratchpadContents);
+            this.checkReady();
+            return true;
+          }
+        }).bind(this.speed);
+        this.waypoint = import_msfs_sdk3.Subject.create("");
+        this.waypointField = new import_msfs_wt21_fmc3.TextInputField(this, {
+          formatter: {
+            nullValueString: "-----",
+            maxLength: 5,
+            format(value) {
+              return value ? `${value}[green]` : this.nullValueString;
+            },
+            async parse(input) {
+              return input;
+            }
+          },
+          onModified: async (scratchpadContents) => {
+            this.waypoint.set(scratchpadContents);
+            this.checkReady();
+            return true;
+          }
+        }).bind(this.waypoint);
+        this.fWaypoint = import_msfs_sdk3.Subject.create("");
+        this.fWaypointField = new import_msfs_wt21_fmc3.TextInputField(this, {
+          formatter: {
+            nullValueString: "-----",
+            maxLength: 5,
+            format(value) {
+              return value ? `${value}[green]` : this.nullValueString;
+            },
+            async parse(input) {
+              return input;
+            }
+          },
+          onModified: async (scratchpadContents) => {
+            this.fWaypoint.set(scratchpadContents);
+            this.checkReady();
+            return true;
+          }
+        }).bind(this.fWaypoint);
+        this.nWaypoint = import_msfs_sdk3.Subject.create("");
+        this.nWaypointField = new import_msfs_wt21_fmc3.TextInputField(this, {
+          formatter: {
+            nullValueString: "-----",
+            maxLength: 5,
+            format(value) {
+              return value ? `${value}[green]` : this.nullValueString;
+            },
+            async parse(input) {
+              return input;
+            }
+          },
+          onModified: async (scratchpadContents) => {
+            this.nWaypoint.set(scratchpadContents);
+            this.checkReady();
+            return true;
+          }
+        }).bind(this.nWaypoint);
+        this.ata = import_msfs_sdk3.Subject.create(null);
+        this.ataField = new import_msfs_wt21_fmc3.TextInputField(this, {
+          formatter: {
+            nullValueString: "--:--",
+            maxLength: 5,
+            format(value) {
+              return value ? `${value.substr(0, 2)}:${value.substr(2)}[green]` : this.nullValueString;
+            },
+            async parse(input) {
+              return input.replace("Z", "");
+            }
+          },
+          onModified: async (scratchpadContents) => {
+            if (Number.isNaN(Number.parseInt(scratchpadContents))) return false;
+            this.ata.set(scratchpadContents);
+            this.checkReady();
+            return true;
+          }
+        }).bind(this.ata);
+        this.eta = import_msfs_sdk3.Subject.create(null);
+        this.etaField = new import_msfs_wt21_fmc3.TextInputField(this, {
+          formatter: {
+            nullValueString: "--:--",
+            maxLength: 5,
+            format(value) {
+              return value ? `${value.substr(0, 2)}:${value.substr(2)}[green]` : this.nullValueString;
+            },
+            async parse(input) {
+              return input.replace("Z", "");
+            }
+          },
+          onModified: async (scratchpadContents) => {
+            if (Number.isNaN(Number.parseInt(scratchpadContents))) return false;
+            this.eta.set(scratchpadContents);
+            this.checkReady();
+            return true;
+          }
+        }).bind(this.eta);
+        this.bus.getSubscriber().on("acars_station_status").handle((message) => {
+          this.station.set(message.active);
+          this.checkReady();
+          this.invalidate();
+        });
+        this.stationField = new import_msfs_wt21_fmc3.DisplayField(this, {
+          formatter: {
+            nullValueString: "----",
+            /** @inheritDoc */
+            format(value) {
+              return `${value}[green]`;
+            }
+          }
+        }).bind(this.station);
+        fetchAcarsStatus(this.bus).then((res) => {
+          this.station.set(res.active);
+          this.invalidate();
+        });
+        this.value = import_msfs_sdk3.Subject.create(null);
+        this.levelField = new import_msfs_wt21_fmc3.TextInputField(this, {
+          formatter: {
+            nullValueString: "---",
+            maxLength: 3,
+            format(value) {
+              return `FL${value}[blue]`;
+            },
+            async parse(input) {
+              return input;
+            }
+          },
+          onModified: async (scratchpadContents) => {
+            if (scratchpadContents.startsWith("FL"))
+              scratchpadContents = scratchpadContents.substr(2);
+            if (Number.isNaN(Number.parseInt(scratchpadContents))) return false;
+            this.value.set(scratchpadContents);
+            this.checkReady();
+            return true;
+          }
+        }).bind(this.value);
+        this.sendButton = new import_msfs_wt21_fmc3.DisplayField(this, {
+          formatter: {
+            nullValueString: "SEND",
+            /** @inheritDoc */
+            format(value) {
+              return `SEND[${value ? "green" : "white"}]`;
+            }
+          },
+          onSelected: async () => {
+            if (this.send.get()) {
+              this.bus.getPublisher().pub(
+                "acars_message_send",
+                {
+                  key: "sendPositionReport",
+                  arguments: [
+                    this.value.get(),
+                    this.speed.get(),
+                    this.waypoint.get(),
+                    this.ata.get(),
+                    this.fWaypoint.get(),
+                    this.eta.get(),
+                    this.nWaypoint.get()
+                  ]
+                },
+                true,
+                false
+              );
+              this.checkReady();
+            }
+            return true;
+          }
+        }).bind(this.send);
+        this.distanceSub = this.bus.getSubscriber().on("lnavdata_waypoint_distance").handle((v) => {
+          this.distance.set(v);
+          this.updatePosData();
+        });
+        this.speedSub = this.bus.getSubscriber().on("ground_speed").handle((v) => {
+          this.groundSpeed.set(v);
+          this.updatePosData();
+        });
+      } catch (err) {
+        console.log(err);
+      }
+    }
+    checkReady() {
+      const array = [
+        this.waypoint,
+        this.fWaypoint,
+        this.nWaypoint,
+        this.ata,
+        this.eta,
+        this.speed,
+        this.value,
+        this.station
+      ];
+      this.send.set(
+        !array.find((e) => {
+          if (!e) return true;
+          const v = e.get();
+          return v === null || (typeof v === "string" ? v.length === 0 : false);
+        })
+      );
+    }
+    onDestroy() {
+      this.speedSub.destroy();
+      this.distanceSub.destroy();
+    }
+    onPause() {
+      this.speedSub.pause();
+      this.distanceSub.pause();
+    }
+    onResume() {
+      this.speedSub.resume();
+      this.distanceSub.resume();
+    }
+    updatePosData() {
+      const gs = this.groundSpeed.get();
+      const distance = this.distance.get();
+      const fp = this.fms.getPrimaryFlightPlan();
+      if (!gs || !distance || !fp) return;
+      {
+        const activeLeg = fp.getLeg(fp.activeLateralLeg);
+        if (activeLeg) this.waypoint.set(activeLeg.name);
+      }
+      {
+        const activeLeg = fp.getLeg(fp.activeLateralLeg + 1);
+        if (activeLeg) this.fWaypoint.set(activeLeg.name);
+      }
+      {
+        const activeLeg = fp.getLeg(fp.activeLateralLeg + 2);
+        if (activeLeg) this.nWaypoint.set(activeLeg.name);
+      }
+      {
+        const time = /* @__PURE__ */ new Date();
+        const rem = 60 * (distance / gs);
+        time.setUTCHours(time.getUTCHours() + Math.floor(rem / 60));
+        time.setUTCMinutes(time.getUTCMinutes() + Math.floor(rem % 60));
+        this.ata.set(
+          `${time.getUTCHours().toString().padStart(2, "0")}${time.getUTCMinutes().toString().padStart(2, "0")}`
+        );
+      }
+      {
+        const leg = fp.getLeg(fp.activeLateralLeg + 1);
+        if (leg) {
+          const time = /* @__PURE__ */ new Date();
+          const rem = 60 * ((this.distance.get() + leg.calculated.distance / 1852) / this.groundSpeed.get());
+          time.setUTCHours(time.getUTCHours() + Math.floor(rem / 60));
+          time.setUTCMinutes(time.getUTCMinutes() + Math.floor(rem % 60));
+          this.eta.set(
+            `${time.getUTCHours().toString().padStart(2, "0")}${time.getUTCMinutes().toString().padStart(2, "0")}`
+          );
+        }
+      }
+      {
+        const v = SimVar.GetSimVarValue("INDICATED ALTITUDE", "feet");
+        this.value.set((v / 100).toFixed(0));
+      }
+      this.checkReady();
+    }
+    render() {
+      return [
+        [
+          ["", this.PagingIndicator, "POS REPORT"],
+          [" SPEED", "ALTITUDE "],
+          [this.speedField, this.levelField],
+          ["", ""],
+          ["", ""],
+          ["", ""],
+          [this.stationField, ""],
+          [
+            import_msfs_wt21_fmc3.PageLinkField.createLink(this, "<ATC INDEX", "/datalink-menu"),
+            this.sendButton
+          ],
+          ["", ""]
+        ],
+        [
+          ["", this.PagingIndicator, "POS REPORT"],
+          [" INBOUND", "ATA "],
+          [this.waypointField, this.ataField],
+          [" NEXT", "ETA "],
+          [this.fWaypointField, this.etaField],
+          [" AFTER", ""],
+          [this.nWaypointField, ""],
+          [
+            import_msfs_wt21_fmc3.PageLinkField.createLink(this, "<ATC INDEX", "/datalink-menu"),
             this.sendButton
           ],
           ["", ""]
@@ -2586,6 +3166,30 @@ ${content}`,
       this.fms.router.add(
         "/datalink-extra/recv-msgs",
         DatalinkReceivedMessagesPage,
+        void 0,
+        {}
+      );
+      this.fms.router.add(
+        "/datalink-extra/messages",
+        AcarsMessagesPage,
+        void 0,
+        {}
+      );
+      this.fms.router.add(
+        "/datalink-extra/inflt-comms",
+        AcarsInFlightCommsPage,
+        void 0,
+        {}
+      );
+      this.fms.router.add(
+        "/datalink-extra/posrep",
+        DatalinkPosReportPage,
+        void 0,
+        {}
+      );
+      this.fms.router.add(
+        "/datalink-extra/clearance",
+        AcarsClerancesPage,
         void 0,
         {}
       );

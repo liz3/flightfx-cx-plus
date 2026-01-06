@@ -11,6 +11,149 @@ import {
 } from "@microsoft/msfs-wt21-fmc";
 import wt21Shared from "@microsoft/msfs-wt21-shared";
 
+export class AcarsMessagesPage extends WT21FmcPage {
+    constructor(
+    bus,
+    screen,
+    props,
+    fms,
+    /** @deprecated */
+    baseInstrument, // TODO we should really not have this here
+    renderCallback,
+  ) {
+    super(bus, screen, props, fms, baseInstrument, renderCallback);
+    this.backLink = PageLinkField.createLink(
+      this,
+      "<ATC INDEX",
+      "/datalink-menu",
+    );
+      this.recvMsgLink = PageLinkField.createLink(
+      this,
+      "",
+      "/datalink-extra/recv-msgs",
+    );
+    this.sendMsgLink = PageLinkField.createLink(
+      this,
+      "",
+      "/datalink-extra/send-msgs",
+    );
+   }
+   render(){
+      return [
+      [
+        ["", this.PagingIndicator, "ATC LOG"],
+        ["<RECV MSGS", ""],
+        [this.recvMsgLink, ""],
+        ["<SEND MSGS", ""],
+        [this.sendMsgLink, ""],
+        ["", ""],
+        ["", ""],
+        [this.backLink, ""],
+        ["", ""],
+      ],
+      ]
+   }
+}
+
+export class AcarsClerancesPage extends WT21FmcPage {
+    constructor(
+    bus,
+    screen,
+    props,
+    fms,
+    /** @deprecated */
+    baseInstrument, // TODO we should really not have this here
+    renderCallback,
+  ) {
+    super(bus, screen, props, fms, baseInstrument, renderCallback);
+    this.backLink = PageLinkField.createLink(
+      this,
+      "<ATC INDEX",
+      "/datalink-menu",
+    );
+    this.predepLink = PageLinkField.createLink(
+      this,
+      "",
+      "/datalink-extra/predep",
+    );
+    this.oceanicLink = PageLinkField.createLink(
+      this,
+      "",
+      "/datalink-extra/oceanic",
+    );
+   }
+   render(){
+      return [
+      [
+        ["", this.PagingIndicator, "ATC REQUEST"],
+        ["<PRE DEP CLX", ""],
+        [this.predepLink, ""],
+        ["<OCEANIC CLX", ""],
+        [this.oceanicLink, ""],
+        ["", ""],
+        ["", ""],
+        [this.backLink, ""],
+        ["", ""],
+      ],
+      ]
+   }
+}
+
+
+export class AcarsInFlightCommsPage extends WT21FmcPage {
+    constructor(
+    bus,
+    screen,
+    props,
+    fms,
+    /** @deprecated */
+    baseInstrument, // TODO we should really not have this here
+    renderCallback,
+  ) {
+    super(bus, screen, props, fms, baseInstrument, renderCallback);
+    this.backLink = PageLinkField.createLink(
+      this,
+      "<ATC INDEX",
+      "/datalink-menu",
+    );
+    this.levelLink = PageLinkField.createLink(
+      this,
+      "",
+      "/datalink-extra/cpdlc/level",
+    );
+    this.directLink = PageLinkField.createLink(
+      this,
+      "",
+      "/datalink-extra/cpdlc/direct",
+    );
+    this.speedLink = PageLinkField.createLink(
+      this,
+      "",
+      "/datalink-extra/cpdlc/speed",
+    );
+        this.statusLink = PageLinkField.createLink(
+      this,
+      "",
+      "/datalink-extra/cpdlc/status",
+    );
+   }
+   render(){
+      return [
+      [
+        ["", this.PagingIndicator, "ATC REQUEST"],
+        ["<SPEED CLX", "LEVEL CLX>"],
+        [this.speedLink, this.levelLink],
+        ["<DIRECT CLX", ""],
+        [this.directLink, ""],
+        ["<STATUS", ""],
+        [this.statusLink, ""],
+        [this.backLink, ""],
+        ["", ""],
+      ],
+      ]
+   }
+}
+
 export class AcarsDatalinkPage extends WT21FmcPage {
   constructor(
     bus,
@@ -32,15 +175,20 @@ export class AcarsDatalinkPage extends WT21FmcPage {
       "",
       "/datalink-extra/settings",
     );
-    this.recvMsgLink = PageLinkField.createLink(
+        this.clearanceLinks = PageLinkField.createLink(
       this,
       "",
-      "/datalink-extra/recv-msgs",
+      "/datalink-extra/clearance",
     );
-    this.sendMsgLink = PageLinkField.createLink(
+    this.msgsLink = PageLinkField.createLink(
+      this,
+      "LOG>",
+      "/datalink-extra/messages",
+    );
+    this.infltComms = PageLinkField.createLink(
       this,
       "",
-      "/datalink-extra/send-msgs",
+      "/datalink-extra/inflt-comms",
     );
     this.atisLink = PageLinkField.createLink(this, "", "/datalink-extra/atis");
     this.telexLink = PageLinkField.createLink(
@@ -50,7 +198,7 @@ export class AcarsDatalinkPage extends WT21FmcPage {
     );
     this.statusLink = PageLinkField.createLink(
       this,
-      "",
+      "<LOGON/STATUS",
       "/datalink-extra/cpdlc/status",
     );
     this.predepLink = PageLinkField.createLink(
@@ -78,31 +226,36 @@ export class AcarsDatalinkPage extends WT21FmcPage {
       "",
       "/datalink-extra/cpdlc/speed",
     );
+        this.posRepLink = PageLinkField.createLink(
+      this,
+      "",
+      "/datalink-extra/posrep",
+    );
   }
   render() {
     return [
       [
-        ["", this.PagingIndicator, "DL MENU"],
-        ["<RECV MSGS", "ATIS>"],
-        [this.recvMsgLink, this.atisLink],
-        ["<SEND MSGS", "TELEX>"],
-        [this.sendMsgLink, this.telexLink],
-        ["<STATUS", ""],
-        [this.statusLink],
-        [this.backLink, ""],
+        ["", this.PagingIndicator, "ATC INDEX"],
+        ["", "POS REPORT>"],
+        ["", this.posRepLink],
+        ["<REQUEST", "WHEN CAN WE>"],
+        [this.infltComms, ""],
+        ["<WX REPORT", ""],
+        [this.atisLink,""],
+        [this.statusLink, this.msgsLink],
         ["", ""],
       ],
       [
-        ["", this.PagingIndicator, "DL MENU"],
-        ["<PRE DEP CLX", "LEVEL CLX>"],
-        [this.predepLink, this.levelLink],
-        ["<OCEANIC CLX", "DIRECT CLX>"],
-        [this.oceanicLink, this.directLink],
-        ["<SPEED CLX", ""],
-        [this.speedLink, ""],
-        [this.backLink, ""],
+               ["", this.PagingIndicator, "ATC INDEX"],
+        ["<FREE TEXT", ""],
+        [this.telexLink, ""],
+        ["<CLEARANCE", ""],
+        [this.clearanceLinks,""],
         ["", ""],
-      ],
+        ["", ""],
+        ["", ""],
+        ["", ""],
+      ]
     ];
   }
 }
@@ -155,7 +308,7 @@ class AcarsPage extends WT21FmcPage {
     return [
       [
         ["", "1/1[page-number-text]", "ACARS"],
-        ["<DATALINK", ""],
+        ["<ATC INDEX", ""],
         [this.datalinkLink, ""],
         ["", "CALLSIGN "],
         ["", this.callsignField],

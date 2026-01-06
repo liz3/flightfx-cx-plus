@@ -33,7 +33,7 @@ class AcarsSettingsPage extends WT21FmcPage {
       SetStoredData("cx_plus_winwing", v === 0 ? "true" : "false");
       this.bus.getPublisher().pub("winwing_setting", v === 0, true, false);
     });
-      this.networkOptions = ["HOPPIE", "SAYINTENTIONS"];
+      this.networkOptions = ["HOPPIE", "SAYI.AI", "BATC"];
     this.networkOption = Subject.create(
       GetStoredData("cx_network_setting")
         ? this.networkOptions.indexOf(
@@ -108,7 +108,7 @@ class AcarsSettingsPage extends WT21FmcPage {
     return [
       [
         ["", "1/1[page-number-text]", "ACARS SETTINGS"],
-        [" HOPPIE ID", ""],
+        [" LOGON", ""],
         [this.hoppieField, ""],
         ["WINWING CDU", ""],
         [this.winwingSwitch, ""],

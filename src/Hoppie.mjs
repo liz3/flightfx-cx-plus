@@ -38,12 +38,13 @@ const parseMessages = (input) => {
 
 const sendAcarsMessage = async (state, receiver, payload, messageType) => {
   const params = new URLSearchParams([
-    ["logon", state.code],
     ["from", state.callsign],
     ["type", messageType],
     ["to", receiver],
     ["packet", payload],
   ]);
+  if(state.code)
+    params.append("logon", state.code);
   return fetch(`${state._service_url}?${params.toString()}`, {
     method: "GET",
   });
@@ -98,15 +99,60 @@ const cpdlcStringBuilder = (state, request, replyId = "") => {
   return `/data2/${state._min_count}/${replyId}/N/${request}`;
 };
 
+// Returns random interval between 45-75 seconds (normal polling)
+const getRandomPollInterval = () => {
+  return Math.floor(Math.random() * (75000 - 45000 + 1)) + 45000;
+};
+
+// Fast polling interval when expecting a response (20 seconds)
+const FAST_POLL_INTERVAL = 1000 * 20;
+
+// Duration to maintain fast polling after sending a request (2 minutes)
+const FAST_POLL_DURATION = 1000 * 60 * 2;
+
+const getPollInterval = (state) => {
+  if (state._expectingResponse && Date.now() < state._expectingResponse) {
+    return FAST_POLL_INTERVAL;
+  }
+  // Reset expecting state if expired
+  if (state._expectingResponse) {
+    state._expectingResponse = null;
+  }
+  return getRandomPollInterval();
+};
+
+const startPollingIfNeeded = (state) => {
+  if (!state._pollingStarted) {
+    state._pollingStarted = true;
+    poll(state);
+  }
+};
+
+// Helper to handle successful response: starts polling and activates fast polling
+const handleSuccessfulSend = (state, text) => {
+  if (text.startsWith("ok")) {
+    startPollingIfNeeded(state);
+    state._expectingResponse = Date.now() + FAST_POLL_DURATION;
+    return true;
+  }
+  return false;
+};
+
 const poll = (state) => {
+  const interval = getPollInterval(state);
   state._interval = setTimeout(() => {
-    sendAcarsMessage(state, "SERVER", "Nothing", "POLL")
+    sendAcarsMessage(state, "SERVER", "Nothing", "poll")
       .then((response) => {
         if (response.ok) {
           response
             .text()
             .then((raw) => {
-              for (const message of parseMessages(raw)) {
+              const messages = parseMessages(raw);
+              // If we received messages, we can stop fast polling
+              if (messages.length > 0 && state._expectingResponse) {
+                state._expectingResponse = null;
+              }
+              for (const message of messages) {
                 if (
                   message.from === state.callsign &&
                   message.type === "inforeq"
@@ -162,7 +208,7 @@ const poll = (state) => {
       .catch((err) => {
         poll(state);
       });
-  }, 10000);
+  }, interval);
 };
 
 const addMessage = (state, content) => {
@@ -171,7 +217,7 @@ const addMessage = (state, content) => {
     content,
     from: state.callsign,
     ts: Date.now(),
-    _id: state.idc++
+     _id: state.idc++
   });
   return content;
 };
@@ -190,7 +236,58 @@ export const convertUnixToHHMM = (unixTimestamp) => {
 
 const SERVICES = {
   hoppie: "https://www.hoppie.nl/acars/system/connect.html",
-  sayintentions: " https://acars.sayintentions.ai/acars/system/connect.html",
+  "sayi.ai": "https://acars.sayintentions.ai/acars/system/connect.html",
+  beyondatc: "http://localhost:57698/connect.html",
+};
+
+// BeyondATC uses a custom REST API for ATIS/METAR requests
+const beyondAtcAtisRequest = async (state, icao, type) => {
+  // TAF requests are not supported by BeyondATC
+  if (type === "TAF") {
+    state._callback({
+      type: "inforeq",
+      content: "TAF not supported",
+      from: "BEYONDATC",
+      ts: Date.now(),
+      _id: state.idc++
+    });
+    return false;
+  }
+
+  const baseUrl = state._service_url.replace("/connect.html", "");
+  const endpoint = type === "METAR" ? "metar" : "atis";
+  try {
+    const response = await fetch(`${baseUrl}/acars/${endpoint}/${icao}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      state._callback({
+        type: "inforeq",
+        content: `Error: ${errorText}`,
+        from: "BEYONDATC",
+        ts: Date.now(),
+         _id: state.idc++
+      });
+      return false;
+    }
+    const text = await response.text();
+    state._callback({
+      type: "inforeq",
+      content: text,
+      from: icao,
+      ts: Date.now(),
+       _id: state.idc++
+    });
+    return true;
+  } catch (err) {
+    state._callback({
+      type: "inforeq",
+      content: `Error: ${err.message}`,
+      from: "BEYONDATC",
+      ts: Date.now(),
+       _id: state.idc++
+    });
+    return false;
+  }
 };
 
 export const createClient = (
@@ -211,6 +308,8 @@ export const createClient = (
     idc: 0,
     message_stack: {},
     _service_url: SERVICES[service],
+    _expectingResponse: null,
+    _pollingStarted: false,
   };
 
   state.dispose = () => {
@@ -226,11 +325,16 @@ export const createClient = (
       "telex",
     );
     if (!response.ok) return false;
-    const text = await response.text();
-    return text.startsWith("ok");
+    return handleSuccessfulSend(state, await response.text());
   };
 
   state.atisRequest = async (icao, type) => {
+    // Handle BeyondATC with custom REST API
+    if (service === "beyondatc") {
+      return beyondAtcAtisRequest(state, icao, type);
+    }
+
+    // Standard Hoppie/SayIntentions handling
     const response = await sendAcarsMessage(
       state,
       state.callsign,
@@ -240,7 +344,7 @@ export const createClient = (
     if (!response.ok) return false;
     const text = await response.text();
     for (const message of parseMessages(text)) {
-      message._id = state.idc++;
+        message._id = state.idc++;
       state._callback(message);
     }
     return text.startsWith("ok");
@@ -281,8 +385,7 @@ export const createClient = (
     );
     if (!response.ok) return false;
     forwardStateUpdate(state);
-    const text = await response.text();
-    return text.startsWith("ok");
+    return handleSuccessfulSend(state, await response.text());
   };
 
   state.sendLogoffRequest = async () => {
@@ -320,8 +423,7 @@ export const createClient = (
       "telex",
     );
     if (!response.ok) return false;
-    const text = await response.text();
-    return text.startsWith("ok");
+    return handleSuccessfulSend(state, await response.text());
   };
 
   state.sendPdc = async (to, dep, arr, stand, atis, eob, freeText) => {
@@ -335,8 +437,7 @@ export const createClient = (
       "telex",
     );
     if (!response.ok) return false;
-    const text = await response.text();
-    return text.startsWith("ok");
+    return handleSuccessfulSend(state, await response.text());
   };
 
   state.sendLevelChange = async (lvl, climb, reason, freeText) => {
@@ -353,8 +454,7 @@ export const createClient = (
       "cpdlc",
     );
     if (!response.ok) return false;
-    const text = await response.text();
-    return text.startsWith("ok");
+    return handleSuccessfulSend(state, await response.text());
   };
 
   state.sendSpeedChange = async (unit, value, reason, freeText) => {
@@ -371,8 +471,7 @@ export const createClient = (
       "cpdlc",
     );
     if (!response.ok) return false;
-    const text = await response.text();
-    return text.startsWith("ok");
+    return handleSuccessfulSend(state, await response.text());
   };
 
   state.sendDirectTo = async (waypoint, reason, freeText) => {
@@ -389,10 +488,10 @@ export const createClient = (
       "cpdlc",
     );
     if (!response.ok) return false;
-    const text = await response.text();
-    return text.startsWith("ok");
+    return handleSuccessfulSend(state, await response.text());
   };
 
-  poll(state);
+  // we start polling instantly with a normal interval in order to receive messages.
+  startPollingIfNeeded(state);
   return state;
 };

@@ -2225,7 +2225,6 @@
             await msfsSdk.Wait.awaitDelay(3000);
             {
                 const data = await Coherent.call('GET_FLIGHTPLAN');
-                console.log(`Flight plan data: ${JSON.stringify(data)}`);
                 const isDirectTo = data.isDirectTo;
                 let lastEnrouteSegment = 1;
                 // TODO: dirto
@@ -11874,6 +11873,7 @@
         FmcPageEvent["PAGE_NAVSEL"] = "PAGE_NAVSEL";
         FmcPageEvent["PAGE_AIRDATA"] = "PAGE_AIRDATA";
         FmcPageEvent["PAGE_DEPARRPRIM"] = "PAGE_DEPARRPRIM";
+        FmcPageEvent["PAGE_SETTINGS"] = "PAGE_SETTINGS";
     })(FmcPageEvent || (FmcPageEvent = {}));
     var FmcSelectKeysEvent;
     (function (FmcSelectKeysEvent) {
@@ -78691,6 +78691,7 @@
             this.gnss1PosLink = PageLinkField.createLink(this, 'GNSS1 POS>', '/gnss1-pos', true);
             this.frequencyLink = PageLinkField.createLink(this, 'FREQUENCY>', '/freq');
             this.tuneLink = PageLinkField.createLink(this, 'TUNE>', '/tune/1');
+            this.settingsLink = PageLinkField.createLink(this, '<SETTINGS', '/settings');
             this.fixLink = PageLinkField.createLink(this, 'FIX>', '/fix', true);
             this.holdLink = PageLinkField.createLink(this, '', '/hold-list');
             this.navIdentLink = PageLinkField.createLink(this, '', '/nav-ident');
@@ -78729,7 +78730,7 @@
         }
         /** @inheritDoc */
         render() {
-            const output =  [
+            const output = [
                 [
                     ['', '1/1[page-number-text]', 'NAV INDEX'],
                     ['<IDENT', 'SIMBRIEF>'],
@@ -78738,7 +78739,7 @@
                     [this.departureLink, this.arrivalLink],
                     ['<POS INIT', 'HOLD>'],
                     [this.posInitLink, this.holdLink],
-                    ['', this.tuneLink],
+                    [this.settingsLink, this.tuneLink],
                     ['', '']
                 ],
                 /*[
@@ -83373,6 +83374,56 @@
                     elements[i].classList.add(classToAdd2);
                 }
             }
+        }
+    }
+
+    class SettingsPage extends FmcPage {
+        constructor() {
+            super(...arguments);
+            this.fmcUserSettings = FmcUserSettings.getManager(this.eventBus);
+            this.isRequestPending = msfsSdk.Subject.create(false);
+            this.resetStatus = msfsSdk.Subject.create("");
+            this.defaultsSettings = DefaultsUserSettings.getManager(this.eventBus);
+            this.resetStatusField = new DisplayField(this, {
+                formatter: RawFormatter,
+                style: '[green]'
+            }).bind(this.resetStatus);
+            this.navLink = PageLinkField.createLink(this, '<INDEX', '/index');
+            this.resetAllDefaults = new DisplayField(this, {
+                formatter: {
+                    nullValueString: '<FACTORY RESET',
+                    format: () => ``,
+                },
+                onSelected: () => {
+                    for (const setting of this.defaultsSettings.getAllSettings()) {
+                        console.log(setting.definition.name, setting.definition.defaultValue);
+                        setting.set(setting.definition.defaultValue);
+                    }
+                    this.resetStatus.set('FACTORY RESET COMPLETE');
+                    return Promise.resolve(true);
+                },
+            });
+        }
+        onInit() {
+            this.resetStatus.set('');
+        }
+        onResume() {
+            this.resetStatus.set('');
+        }
+        /** @inheritDoc */
+        render() {
+            return [
+                [
+                    ['', '', 'SETTINGS[white]'],
+                    ['', ''],
+                    [this.resetAllDefaults, ''],
+                    ['', ''],
+                    ['', ''],
+                    ['', ''],
+                    [this.resetStatusField, ''],
+                    [this.navLink, '']
+                ]
+            ];
         }
     }
 
@@ -88435,7 +88486,8 @@
                 .add('/simbrief', SimBriefPage)
                 .add('/nav-selection-page', NavSelectionPage, FmcPageEvent.PAGE_NAVSEL)
                 .add('/air-data-page', AirDataPage, FmcPageEvent.PAGE_AIRDATA)
-                .add('/dep-arr-primus-page', DepPrimusPage, FmcPageEvent.PAGE_DEPARRPRIM);
+                .add('/dep-arr-primus-page', DepPrimusPage, FmcPageEvent.PAGE_DEPARRPRIM)
+                .add('/settings', SettingsPage, FmcPageEvent.PAGE_SETTINGS);
             /*.add('/', IndexPage, FmcPageEvent.PAGE_INDEX)
             .add('/legs', LegsPage, FmcPageEvent.PAGE_LEGS)
             .add('/route', FplnPage, FmcPageEvent.PAGE_FPLN)
@@ -88620,10 +88672,10 @@
         /** @inheritdoc */
         constructInstrument() {
             this.electricity.classList.toggle('hidden', true);
-            const element =  new WT21_FMC_Instrument(this);
+            const element = new WT21_FMC_Instrument(this);
             if(window.pluginListener) {
-                for(const listener of window.pluginListener)
-                    listener(element)
+              for(const listener of window.pluginListener)
+                listener(element)
             }
             return element;
         }
@@ -88646,7 +88698,7 @@
             this.electricity.classList.toggle('hidden', true);
         }
     }
-        window.vtx21PluginImports = {
+    window.vtx21PluginImports = {
         WT21FmcPage: FmcPage,
         FmcPage,
         DisplayField,
@@ -88655,12 +88707,7 @@
         TextInputField,
         StringInputFormat,
         SwitchLabel
-    }
+     }
     registerInstrument('wt21-fmc', WT21_FMC);
-    /*                FmcPage,
-                        DisplayField,
-                        PageLinkField,
-                        FmcUserSettings */
-
 })(msfssdk);
 

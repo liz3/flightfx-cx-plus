@@ -9,6 +9,16 @@
 			<AssetGroup Name="web-ui"/>
 		</Package>
 	</RPTInput>
+	<RPTInput Path="D:\Projects\flightfx-cx-plugin\package\PackageSources\Copys\flightfx-cx-plugin\web-ui\Pages\Vcockpit\instruments\vtx21\efb\efb.js">
+		<Package Name="liz3-flightfx-cx-plugin">
+			<AssetGroup Name="web-ui"/>
+		</Package>
+	</RPTInput>
+	<RPTInput Path="D:\Projects\flightfx-cx-plugin\package\PackageSources\Copys\flightfx-cx-plugin\web-ui\Pages\Vcockpit\instruments\vtx21\mfd\mfd.js">
+		<Package Name="liz3-flightfx-cx-plugin">
+			<AssetGroup Name="web-ui"/>
+		</Package>
+	</RPTInput>
 	<RPTInput Path="D:\Projects\flightfx-cx-plugin\package\PackageDefinitions\liz3-flightfx-cx-plugin\ContentInfo\Thumbnail.jpg">
 		<Package Name="liz3-flightfx-cx-plugin">
 			<AssetGroup Name="ContentInfo"/>

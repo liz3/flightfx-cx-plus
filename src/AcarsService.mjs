@@ -163,7 +163,7 @@ const acarsService = (bus) => {
     .getSetting("flightNumber")
     .sub((value) => {
       if (!value || !value.length) {
-        const current = this.acarsClient.get();
+        const current = acars.client;
         if (current) {
           current.dispose();
         }

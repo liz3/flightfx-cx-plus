@@ -849,7 +849,7 @@ ${content}`,
     });
     import_msfs_wt21_shared2.default.FmcUserSettings.getManager(bus).getSetting("flightNumber").sub((value) => {
       if (!value || !value.length) {
-        const current = (void 0).acarsClient.get();
+        const current = acars.client;
         if (current) {
           current.dispose();
         }
@@ -3200,7 +3200,18 @@ ${content}`,
       );
     }
     onPageRendered(renderedTemplates) {
-      renderedTemplates[0][7] = [this.acarsLink, renderedTemplates[0][7][1]];
+      renderedTemplates[0][0] = ["", "1/2[page-number-text]", "NAV INDEX"];
+      renderedTemplates[1] = [
+        ["", "2/2[page-number-text]", "NAV INDEX"],
+        ["", ""],
+        [this.acarsLink, ""],
+        ["", ""],
+        ["", ""],
+        ["", ""],
+        ["", ""],
+        ["", ""],
+        ["", ""]
+      ];
     }
   };
   var PageInterceptor_default = DatalinkPageExtension;

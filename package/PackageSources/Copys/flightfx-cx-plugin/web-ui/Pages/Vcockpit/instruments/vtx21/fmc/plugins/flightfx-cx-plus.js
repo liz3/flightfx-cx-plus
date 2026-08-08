@@ -587,23 +587,40 @@
       if (!response.ok) return false;
       return handleSuccessfulSend(state, await response.text());
     };
-    state.atisRequest = async (icao, type) => {
+    state.atisRequestDirect = async (icao, type, dir = "D") => {
       if (service === "beyondatc") {
         return beyondAtcAtisRequest(state, icao, type);
       }
       const response = await sendAcarsMessage(
         state,
         state.callsign,
-        `${(type === "ATIS" ? "VATATIS" : type).toUpperCase()} ${icao}`,
+        `${(type === "ATIS" ? "VATATIS" : type).toUpperCase()} ${icao}${type === "ATIS" ? "_" + dir : ""}`,
         "inforeq"
       );
-      if (!response.ok) return false;
-      const text = await response.text();
-      for (const message of parseMessages(text)) {
-        message._id = state.idc++;
-        state._callback(message);
+      if (!response.ok) return [false, []];
+      let text = await response.text();
+      const parsed = parseMessages(text);
+      if (parsed.length === 1 && parsed[0].content && parsed[0].content.replace(/\n/, " ") === "THIS ATIS IS NOT AVAILABLE") {
+        const response2 = await sendAcarsMessage(
+          state,
+          state.callsign,
+          `${(type === "ATIS" ? "VATATIS" : type).toUpperCase()} ${icao}`,
+          "inforeq"
+        );
+        if (!response2.ok) return [false, []];
+        text = await response2.text();
       }
-      return text.startsWith("ok");
+      return [text.startsWith("ok"), parseMessages(text)];
+    };
+    state.atisRequest = async (icao, type, dir = "D") => {
+      const [success, list] = await state.atisRequestDirect(icao, type, dir);
+      if (success)
+        for (const message of list) {
+          state._callback(
+            message
+          );
+        }
+      return success;
     };
     state.sendPositionReport = async (fl, mach, wp, wpEta, nextWp, nextWpEta, followWp) => {
       if (!state.active_station) return;
@@ -1522,12 +1539,23 @@ ${content}`,
       this.bus = this.eventBus;
       this.send = import_msfs_sdk3.Subject.create(false);
       this.reqType = import_msfs_sdk3.Subject.create(0);
+      this.reqDir = import_msfs_sdk3.Subject.create(0);
+      this.dirDisabled = import_msfs_sdk3.Subject.create(false);
       this.facility = import_msfs_sdk3.Subject.create("");
       this.opts = ["ATIS", "METAR", "TAF"];
+      this.dirOpts = ["ARR", "DEP"];
       this.typeSwitch = new import_msfs_wt21_fmc3.SwitchLabel(this, {
         optionStrings: this.opts,
         activeStyle: "green"
       }).bind(this.reqType);
+      this.dirSwitch = new import_msfs_wt21_fmc3.SwitchLabel(this, {
+        optionStrings: this.dirOpts,
+        activeStyle: "green"
+        // disabled: () => this.dirDisabled.get()
+      }).bind(this.reqDir);
+      this.reqType.sub((v) => {
+        this.dirDisabled.set(v !== 0);
+      });
       this.sendButton = new import_msfs_wt21_fmc3.DisplayField(this, {
         formatter: {
           nullValueString: "SEND",
@@ -1542,7 +1570,7 @@ ${content}`,
               "acars_message_send",
               {
                 key: "atisRequest",
-                arguments: [this.facility.get(), this.opts[this.reqType.get()]]
+                arguments: [this.facility.get(), this.opts[this.reqType.get()], this.reqDir.get() === -1 ? "A" : "D"]
               },
               true,
               false
@@ -1578,9 +1606,9 @@ ${content}`,
       return [
         [
           ["ATC WX REPORT"],
-          [" FACILITY"],
-          [this.facilityField],
-          [" TYPE", ""],
+          [" FACILITY", this.dirDisabled.get() ? "" : "TYPE "],
+          [this.facilityField, this.dirDisabled.get() ? "" : this.dirSwitch],
+          [" SERVICE", ""],
           [this.typeSwitch, ""],
           ["", ""],
           ["", this.sendButton],

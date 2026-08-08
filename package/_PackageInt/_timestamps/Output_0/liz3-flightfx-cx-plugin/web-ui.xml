@@ -1,9 +1,8 @@
 <Timestamps>
-	<Entry Path="Pages\Vcockpit\instruments\vtx21\fmc\wt21_fmc.html" Timestamp="13403143249"/>
-	<Entry Path="Pages\Vcockpit\instruments\vtx21\eicas\eicas.js" Timestamp="13420343491"/>
-	<Entry Path="Pages\Vcockpit\instruments\vtx21\fmc\plugins\flightfx-cx-plus.js" Timestamp="13420343338"/>
-	<Entry Path="Pages\Vcockpit\instruments\vtx21\efb\efb.js" Timestamp="13420575316"/>
-	<Entry Path="Pages\Vcockpit\instruments\vtx21\mfd\mfd.js" Timestamp="13420500339"/>
-	<Entry Path="Pages\Vcockpit\instruments\vtx21\fmc\plugins\hook.js" Timestamp="13420342603"/>
+	<Entry Path="Pages\Vcockpit\instruments\vtx21\fmc\wt21_fmc.html" Timestamp="13430687081"/>
+	<Entry Path="Pages\Vcockpit\instruments\vtx21\eicas\vtx_eicas.html" Timestamp="13430693697"/>
+	<Entry Path="Pages\Vcockpit\instruments\vtx21\fmc\loader.js" Timestamp="13430691529"/>
+	<Entry Path="Pages\Vcockpit\instruments\vtx21\fmc\plugins\flightfx-cx-plus.js" Timestamp="13430694504"/>
+	<Entry Path="Pages\Vcockpit\instruments\vtx21\eicas\loader.js" Timestamp="13430694436"/>
 </Timestamps>
 

@@ -1,0 +1,37 @@
+<link rel="stylesheet" href="EICAS.css" />
+
+<script type="text/html" id="HP2000_EICAS">
+  <div id="Mainframe">
+    <div id="loadingBackgroundEicas">
+      <svg width="772" height="1024">
+        <line x1="0" y1="0" x2="772" y2="1024" style="stroke:red;stroke-width:2" />
+        <line x1="772" y1="0" x2="0" y2="1024" style="stroke:red;stroke-width:2" />
+      </svg>
+      <div class="lightBleed"></div>
+    </div>
+
+    <div id="Electricity" state="off">
+
+      <div class="refImageBackground">
+        <img id="refImageSize" src="/Pages/VCockpit/Instruments/VTX21/Assets/eicas_background.png" />
+      </div>
+      <!--<div class="refImage">
+        <img id="refImageSize" src="/Pages/VCockpit/Instruments/VTX21/Assets/eicas_ref.png" />
+      </div> -->
+      <div id="eicas" class="eicas-content">
+        
+      </div>
+      <div class="lightBleed"></div>
+    </div>
+  </div>
+</script>
+
+
+<script type="text/html" import-script="/JS/SimPlane.js"></script>
+<script type="text/html" import-script="/JS/NetBingMap.js"></script>
+<script type="text/html" import-script="/JS/dataStorage.js"></script>
+<script type="text/html" import-script="/Pages/VCockpit/Instruments/NavSystems/Shared/Templates/Highlight/Highlight.js">
+</script>
+<script type="text/html" import-script="/Pages/VCockpit/Instruments/VTX21/Libraries/msfssdk.js">
+</script>
+<script type="text/html" import-script="/Pages/VCockpit/Instruments/VTX21/EICAS/loader.js"></script>

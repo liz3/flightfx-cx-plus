@@ -328,28 +328,47 @@ export const createClient = (
     return handleSuccessfulSend(state, await response.text());
   };
 
-  state.atisRequest = async (icao, type) => {
-    // Handle BeyondATC with custom REST API
-    if (service === "beyondatc") {
-      return beyondAtcAtisRequest(state, icao, type);
-    }
-
-    // Standard Hoppie/SayIntentions handling
-    const response = await sendAcarsMessage(
-      state,
-      state.callsign,
-      `${(type === "ATIS" ? "VATATIS" : type).toUpperCase()} ${icao}`,
-      "inforeq",
-    );
-    if (!response.ok) return false;
-    const text = await response.text();
-    for (const message of parseMessages(text)) {
-        message._id = state.idc++;
-      state._callback(message);
-    }
-    return text.startsWith("ok");
-  };
-
+  
+  state.atisRequestDirect = async (icao, type, dir = "D") => {
+     // Handle BeyondATC with custom REST API
+     if (service === "beyondatc") {
+       return beyondAtcAtisRequest(state, icao, type);
+     }
+ 
+     // Standard Hoppie/SayIntentions handling
+     const response = await sendAcarsMessage(
+       state,
+       state.callsign,
+       `${(type === "ATIS" ? "VATATIS" : type).toUpperCase()} ${icao}${type === "ATIS" ? "_" + dir : ""}`,
+       "inforeq",
+     );
+     if (!response.ok) return [false, []];
+     let text = await response.text();
+     const parsed = parseMessages(text);
+     if (parsed.length ===  1 &&  parsed[0].content &&  parsed[0].content.replace(/\n/, " ") === "THIS ATIS IS NOT AVAILABLE") {
+       const response2 = await sendAcarsMessage(
+         state,
+         state.callsign,
+         `${(type === "ATIS" ? "VATATIS" : type).toUpperCase()} ${icao}`,
+         "inforeq",
+       );
+       if (!response2.ok) return [false, []];
+       text = await response2.text();
+     }
+     return [text.startsWith("ok"), parseMessages(text)];
+ 
+     
+   };
+   state.atisRequest = async (icao, type, dir = "D") => {
+     const [success, list] = await state.atisRequestDirect(icao, type, dir);
+     if(success)
+     for (const message of list) {
+       state._callback(
+         message
+       );
+     }
+     return success;
+   };
   state.sendPositionReport = async (
     fl,
     mach,

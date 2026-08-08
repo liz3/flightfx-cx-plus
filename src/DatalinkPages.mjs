@@ -448,12 +448,23 @@ export class DatalinkAtisPage extends WT21FmcPage {
 
     this.send = Subject.create(false);
     this.reqType = Subject.create(0);
+    this.reqDir = Subject.create(0);
+    this.dirDisabled = Subject.create(false);
     this.facility = Subject.create("");
     this.opts = ["ATIS", "METAR", "TAF"];
+    this.dirOpts = ["ARR", "DEP"];
     this.typeSwitch = new SwitchLabel(this, {
       optionStrings: this.opts,
       activeStyle: "green",
     }).bind(this.reqType);
+    this.dirSwitch = new SwitchLabel(this, {
+      optionStrings: this.dirOpts,
+      activeStyle: "green",
+      // disabled: () => this.dirDisabled.get()
+    }).bind(this.reqDir);
+    this.reqType.sub(v => {
+      this.dirDisabled.set(v !== 0)
+    })
 
     this.sendButton = new DisplayField(this, {
       formatter: {
@@ -469,7 +480,7 @@ export class DatalinkAtisPage extends WT21FmcPage {
             "acars_message_send",
             {
               key: "atisRequest",
-              arguments: [this.facility.get(), this.opts[this.reqType.get()]],
+              arguments: [this.facility.get(), this.opts[this.reqType.get()],  this.reqDir.get() === -1 ? "A" : "D"],
             },
             true,
             false,
@@ -507,9 +518,9 @@ export class DatalinkAtisPage extends WT21FmcPage {
     return [
       [
         ["ATC WX REPORT"],
-        [" FACILITY"],
-        [this.facilityField],
-        [" TYPE", ""],
+        [" FACILITY", this.dirDisabled.get() ? "" : "TYPE "],
+        [this.facilityField, this.dirDisabled.get() ? "" : this.dirSwitch],
+        [" SERVICE", ""],
         [this.typeSwitch, ""],
         ["", ""],
         ["", this.sendButton],

@@ -20,14 +20,15 @@ const parseMessages = (input) => {
           ra: parts[4],
           content: parts[5],
         };
+        if (!message.cpdlc.protocol)
+          continue;
         message.content = message.cpdlc.content;
         if (message.content) {
           message.content = message.content.replace(/@/g, "");
         }
       } else {
-        const nonEmptyParts = parts.filter((part) => part !== "");
-        message.content = nonEmptyParts.pop();
-      }
+        message.content = message.payload.trim();
+     }
     } else {
       message.content = message.payload;
     }

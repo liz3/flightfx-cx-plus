@@ -37,7 +37,29 @@ export const deleteMessage = (bus, id) => {
     bus.getPublisher().pub(`acars_del_msg`, id, true, false);
 };
 
-
+const initClient = (callsign, publisher) => {
+  acars.client = createClient(
+    GetStoredData("cx_plus_hoppie_code"),
+    callsign,
+    "C750",
+    (message) => {
+      acars.messages.push(message);
+      if (message.type === "send") {
+        publisher
+          .pub("acars_outgoing_message", message, true, false);
+      } else {
+        publisher.pub("acars_incoming_message", message, true, false);
+        publisher.pub("pcas_activate", message.cpdlc ? "cpdlc-msg" : "acars-msg", true, false);
+      }
+    },
+     GetStoredData("cx_network_setting")
+      ? GetStoredData("cx_network_setting").toLowerCase()
+      : "hoppie",
+  );
+  acars.client._stationCallback = (opt) => {
+    publisher.pub("acars_station_status", opt, true, false);
+  };
+}
 const acarsService = (bus) => {
   const publisher = bus.getPublisher();
   bus
@@ -135,26 +157,7 @@ const acarsService = (bus) => {
         if (acars.client) {
           acars.client.dispose();
         }
-        acars.client = createClient(
-          GetStoredData("cx_plus_hoppie_code"),
-          callSign,
-          "c750",
-          (message) => {
-            acars.messages.push(message);
-            if (message.type === "send") {
-              publisher
-                .pub("acars_outgoing_message", message, true, false);
-            } else {
-              publisher.pub("acars_incoming_message", message, true, false);
-              publisher.pub("pcas_activate", "acars-msg", true, false);
-            }
-          },
-          v.toLowerCase(),
-        );
-        acars.client._stationCallback = (opt) => {
-          publisher
-            .pub("acars_station_status", opt, true, false);
-        };
+        initClient(callSign, publisher);
       }
       return true;
     });
@@ -171,27 +174,7 @@ const acarsService = (bus) => {
         publisher.pub("acars_new_client", null, true, false);
         return;
       }
-      acars.client = createClient(
-        GetStoredData("cx_plus_hoppie_code"),
-        value,
-        "C750",
-        (message) => {
-          acars.messages.push(message);
-          if (message.type === "send") {
-            publisher
-              .pub("acars_outgoing_message", message, true, false);
-          } else {
-            publisher.pub("acars_incoming_message", message, true, false);
-            publisher.pub("pcas_activate", "acars-msg", true, false);
-          }
-        },
-         GetStoredData("cx_network_setting")
-          ? GetStoredData("cx_network_setting").toLowerCase()
-          : "hoppie",
-      );
-      acars.client._stationCallback = (opt) => {
-        publisher.pub("acars_station_status", opt, true, false);
-      };
+      initClient(value, publisher);
     });
 };
 

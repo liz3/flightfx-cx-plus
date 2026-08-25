@@ -332,7 +332,7 @@ export class DatalinkMessagePage extends WT21FmcPage {
         ? this.router.params["message"]
         : { id: -1, content: "----", options: null, from: "DEV" };
     if (message.id !== -1 && !message.read) {
-      this.bus.getPublisher().pub("pcas_deactivate", "acars-msg", true, false);
+      this.bus.getPublisher().pub("pcas_deactivate", message.cpdlc ? "cpdlc-msg" : "acars-msg", true, false);
       message.read = true;
     }
     let messageLines = 5;

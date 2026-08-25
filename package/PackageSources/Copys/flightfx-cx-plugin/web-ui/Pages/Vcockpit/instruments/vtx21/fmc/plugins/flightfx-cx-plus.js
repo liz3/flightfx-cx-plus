@@ -337,13 +337,14 @@
             ra: parts[4],
             content: parts[5]
           };
+          if (!message.cpdlc.protocol)
+            continue;
           message.content = message.cpdlc.content;
           if (message.content) {
             message.content = message.content.replace(/@/g, "");
           }
         } else {
-          const nonEmptyParts = parts.filter((part) => part !== "");
-          message.content = nonEmptyParts.pop();
+          message.content = message.payload.trim();
         }
       } else {
         message.content = message.payload;
@@ -769,6 +770,26 @@ ${content}`,
   var deleteMessage = (bus, id) => {
     bus.getPublisher().pub(`acars_del_msg`, id, true, false);
   };
+  var initClient = (callsign, publisher) => {
+    acars.client = createClient(
+      GetStoredData("cx_plus_hoppie_code"),
+      callsign,
+      "C750",
+      (message) => {
+        acars.messages.push(message);
+        if (message.type === "send") {
+          publisher.pub("acars_outgoing_message", message, true, false);
+        } else {
+          publisher.pub("acars_incoming_message", message, true, false);
+          publisher.pub("pcas_activate", message.cpdlc ? "cpdlc-msg" : "acars-msg", true, false);
+        }
+      },
+      GetStoredData("cx_network_setting") ? GetStoredData("cx_network_setting").toLowerCase() : "hoppie"
+    );
+    acars.client._stationCallback = (opt) => {
+      publisher.pub("acars_station_status", opt, true, false);
+    };
+  };
   var acarsService = (bus) => {
     const publisher = bus.getPublisher();
     bus.getSubscriber().on("acars_message_send").handle((v) => {
@@ -843,24 +864,7 @@ ${content}`,
         if (acars.client) {
           acars.client.dispose();
         }
-        acars.client = createClient(
-          GetStoredData("cx_plus_hoppie_code"),
-          callSign,
-          "c750",
-          (message) => {
-            acars.messages.push(message);
-            if (message.type === "send") {
-              publisher.pub("acars_outgoing_message", message, true, false);
-            } else {
-              publisher.pub("acars_incoming_message", message, true, false);
-              publisher.pub("pcas_activate", "acars-msg", true, false);
-            }
-          },
-          v.toLowerCase()
-        );
-        acars.client._stationCallback = (opt) => {
-          publisher.pub("acars_station_status", opt, true, false);
-        };
+        initClient(callSign, publisher);
       }
       return true;
     });
@@ -874,24 +878,7 @@ ${content}`,
         publisher.pub("acars_new_client", null, true, false);
         return;
       }
-      acars.client = createClient(
-        GetStoredData("cx_plus_hoppie_code"),
-        value,
-        "C750",
-        (message) => {
-          acars.messages.push(message);
-          if (message.type === "send") {
-            publisher.pub("acars_outgoing_message", message, true, false);
-          } else {
-            publisher.pub("acars_incoming_message", message, true, false);
-            publisher.pub("pcas_activate", "acars-msg", true, false);
-          }
-        },
-        GetStoredData("cx_network_setting") ? GetStoredData("cx_network_setting").toLowerCase() : "hoppie"
-      );
-      acars.client._stationCallback = (opt) => {
-        publisher.pub("acars_station_status", opt, true, false);
-      };
+      initClient(value, publisher);
     });
   };
   var AcarsService_default = acarsService;
@@ -1439,7 +1426,7 @@ ${content}`,
     render() {
       const message = this.router.params && this.router.params["message"] ? this.router.params["message"] : { id: -1, content: "----", options: null, from: "DEV" };
       if (message.id !== -1 && !message.read) {
-        this.bus.getPublisher().pub("pcas_deactivate", "acars-msg", true, false);
+        this.bus.getPublisher().pub("pcas_deactivate", message.cpdlc ? "cpdlc-msg" : "acars-msg", true, false);
         message.read = true;
       }
       let messageLines = 5;
@@ -3360,20 +3347,32 @@ ${content}`,
         void 0,
         {}
       );
-      if (this.fms.instrument.isPrimary)
+      if (this.fms.instrument.isPrimary) {
         this.service = AcarsService_default(this.fms.bus);
-      import_msfs_wt21_shared4.default.FmcUserSettings.getManager(this.eventBus).getSetting("flightNumber").set(null);
-      this.fms.bus.getPublisher().pub(
-        "pcas_register",
-        {
-          uuid: "acars-msg",
-          message: "DATALINK MESSAGE",
-          type: 2,
-          sound: 2
-        },
-        true,
-        false
-      );
+        import_msfs_wt21_shared4.default.FmcUserSettings.getManager(this.eventBus).getSetting("flightNumber").set(null);
+        this.fms.bus.getPublisher().pub(
+          "pcas_register",
+          {
+            uuid: "acars-msg",
+            message: "DATALINK MESSAGE",
+            type: 2,
+            sound: 2
+          },
+          true,
+          false
+        );
+        this.fms.bus.getPublisher().pub(
+          "pcas_register",
+          {
+            uuid: "cpdlc-msg",
+            message: "ATC MESSAGE",
+            type: 2,
+            sound: 2
+          },
+          true,
+          false
+        );
+      }
     }
   };
   if (!window.pluginListener) window.pluginListener = [];

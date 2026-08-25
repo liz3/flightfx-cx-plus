@@ -2,7 +2,9 @@
 	<CheckedOutPackages>
 		<Package Name="liz3-flightfx-cx-plugin"/>
 	</CheckedOutPackages>
-	<SelectedPackages/>
+	<SelectedPackages>
+		<Package Name="liz3-flightfx-cx-plugin"/>
+	</SelectedPackages>
 	<Filter/>
 	<ShowOnlyEdited>false</ShowOnlyEdited>
 </UserSettings>

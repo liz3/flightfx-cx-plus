@@ -149,22 +149,34 @@ class Plugin {
       {},
     );
 
-    if (this.fms.instrument.isPrimary)
+    if (this.fms.instrument.isPrimary) {
       this.service = acarsService(this.fms.bus);
-    wt21Shared.FmcUserSettings.getManager(this.eventBus)
-      .getSetting("flightNumber")
-      .set(null);
-    this.fms.bus.getPublisher().pub(
-      "pcas_register",
-      {
-        uuid: "acars-msg",
-        message: "DATALINK MESSAGE",
-        type: 2,
-        sound: 2,
-      },
-      true,
-      false,
-    );
+      wt21Shared.FmcUserSettings.getManager(this.eventBus)
+        .getSetting("flightNumber")
+        .set(null);
+      this.fms.bus.getPublisher().pub(
+        "pcas_register",
+        {
+          uuid: "acars-msg",
+          message: "DATALINK MESSAGE",
+          type: 2,
+          sound: 2,
+        },
+        true,
+        false,
+      );
+      this.fms.bus.getPublisher().pub(
+        "pcas_register",
+        {
+          uuid: "cpdlc-msg",
+          message: "ATC MESSAGE",
+          type: 2,
+          sound: 2,
+        },
+        true,
+        false,
+      );
+    }
   }
 }
 

@@ -1,30 +1,30 @@
 <RPTInputs>
-	<RPTInput Path="D:\Projects\flightfx-cx-plugin\package\PackageSources\Copys\flightfx-cx-plugin\web-ui\Pages\Vcockpit\instruments\vtx21\fmc\plugins\flightfx-cx-plus.js">
+	<RPTInput Path="S:\repos\flightfx-cx-plus\package\PackageSources\Copys\flightfx-cx-plugin\web-ui\Pages\Vcockpit\instruments\vtx21\fmc\loader.js">
 		<Package Name="liz3-flightfx-cx-plugin">
 			<AssetGroup Name="web-ui"/>
 		</Package>
 	</RPTInput>
-	<RPTInput Path="D:\Projects\flightfx-cx-plugin\package\PackageSources\Copys\flightfx-cx-plugin\web-ui\Pages\Vcockpit\instruments\vtx21\eicas\vtx_eicas.html">
-		<Package Name="liz3-flightfx-cx-plugin">
-			<AssetGroup Name="web-ui"/>
-		</Package>
-	</RPTInput>
-	<RPTInput Path="D:\Projects\flightfx-cx-plugin\package\PackageDefinitions\liz3-flightfx-cx-plugin\ContentInfo\Thumbnail.jpg">
+	<RPTInput Path="S:\repos\flightfx-cx-plus\package\PackageDefinitions\liz3-flightfx-cx-plugin\ContentInfo\Thumbnail.jpg">
 		<Package Name="liz3-flightfx-cx-plugin">
 			<AssetGroup Name="ContentInfo"/>
 		</Package>
 	</RPTInput>
-	<RPTInput Path="D:\Projects\flightfx-cx-plugin\package\PackageSources\Copys\flightfx-cx-plugin\web-ui\Pages\Vcockpit\instruments\vtx21\fmc\loader.js">
+	<RPTInput Path="S:\repos\flightfx-cx-plus\package\PackageSources\Copys\flightfx-cx-plugin\web-ui\Pages\Vcockpit\instruments\vtx21\fmc\wt21_fmc.html">
 		<Package Name="liz3-flightfx-cx-plugin">
 			<AssetGroup Name="web-ui"/>
 		</Package>
 	</RPTInput>
-	<RPTInput Path="D:\Projects\flightfx-cx-plugin\package\PackageSources\Copys\flightfx-cx-plugin\web-ui\Pages\Vcockpit\instruments\vtx21\eicas\loader.js">
+	<RPTInput Path="S:\repos\flightfx-cx-plus\package\PackageSources\Copys\flightfx-cx-plugin\web-ui\Pages\Vcockpit\instruments\vtx21\fmc\plugins\flightfx-cx-plus.js">
 		<Package Name="liz3-flightfx-cx-plugin">
 			<AssetGroup Name="web-ui"/>
 		</Package>
 	</RPTInput>
-	<RPTInput Path="D:\Projects\flightfx-cx-plugin\package\PackageSources\Copys\flightfx-cx-plugin\web-ui\Pages\Vcockpit\instruments\vtx21\fmc\wt21_fmc.html">
+	<RPTInput Path="S:\repos\flightfx-cx-plus\package\PackageSources\Copys\flightfx-cx-plugin\web-ui\Pages\Vcockpit\instruments\vtx21\eicas\vtx_eicas.html">
+		<Package Name="liz3-flightfx-cx-plugin">
+			<AssetGroup Name="web-ui"/>
+		</Package>
+	</RPTInput>
+	<RPTInput Path="S:\repos\flightfx-cx-plus\package\PackageSources\Copys\flightfx-cx-plugin\web-ui\Pages\Vcockpit\instruments\vtx21\eicas\loader.js">
 		<Package Name="liz3-flightfx-cx-plugin">
 			<AssetGroup Name="web-ui"/>
 		</Package>

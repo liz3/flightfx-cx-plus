@@ -18,15 +18,15 @@
           render() {
               const output = [
                   [
-                      ['', '1/1[page-number-text]', 'NAV INDEX'],
-                      ['<IDENT', 'SIMBRIEF>'],
-                      [this.navIdentLink, this.simbriefLink],
-                      ['<DEPARTURE', 'ARRIVAL>'],
-                      [this.departureLink, this.arrivalLink],
-                      ['<POS INIT', 'HOLD>'],
-                      [this.posInitLink, this.holdLink],
-                      [this.settingsLink, this.tuneLink],
-                      ['', '']
+                  ['', '1/1[page-number-text]', 'NAV INDEX'],
+                   ['<IDENT', 'ARRIVAL>'],
+                   [this.navIdentLink, this.arrivalLink],
+                   ['<DEPARTURE', 'HOLD>'],
+                   [this.departureLink, this.holdLink],
+                   ['<POS INIT', 'TUNE>'],
+                   [this.posInitLink, this.tuneLink],
+                   ['', ''],
+                   ['', '']
                   ],
                   /*[
                     ['', '2/2[page-number-text]', 'NAV INDEX'],

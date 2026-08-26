@@ -15,6 +15,7 @@
     this.casAnnounciations = {};
 
               props.bus.getSubscriber().on("pcas_register").handle(v => {
+                console.log("register", v);
                 this.casAnnounciations[v.uuid] = {
                     text: v.message,
                     type: v.type,

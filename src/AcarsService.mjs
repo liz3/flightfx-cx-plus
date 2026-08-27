@@ -36,7 +36,11 @@ export const deleteMessage = (bus, id) => {
 
     bus.getPublisher().pub(`acars_del_msg`, id, true, false);
 };
-
+const correctNetwork = {
+  hopppie: "hoppie",
+  "batc": "beyondatc",
+  "sayi.ai": "sayintentions"
+}
 const initClient = (callsign, publisher) => {
   acars.client = createClient(
     GetStoredData("cx_plus_hoppie_code"),
@@ -53,7 +57,7 @@ const initClient = (callsign, publisher) => {
       }
     },
      GetStoredData("cx_network_setting")
-      ? GetStoredData("cx_network_setting").toLowerCase()
+      ? correctNetwork[ GetStoredData("cx_network_setting").toLowerCase()]
       : "hoppie",
   );
   acars.client._stationCallback = (opt) => {

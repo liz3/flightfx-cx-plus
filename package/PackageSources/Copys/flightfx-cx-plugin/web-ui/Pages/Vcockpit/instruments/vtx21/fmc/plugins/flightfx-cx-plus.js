@@ -510,7 +510,7 @@
   };
   var SERVICES = {
     hoppie: "https://www.hoppie.nl/acars/system/connect.html",
-    "sayi.ai": "https://acars.sayintentions.ai/acars/system/connect.html",
+    sayintentions: "https://acars.sayintentions.ai/acars/system/connect.html",
     beyondatc: "http://localhost:57698/connect.html"
   };
   var beyondAtcAtisRequest = async (state, icao, type) => {
@@ -595,7 +595,7 @@
       const response = await sendAcarsMessage(
         state,
         state.callsign,
-        `${(type === "ATIS" ? "VATATIS" : type).toUpperCase()} ${icao}${type === "ATIS" ? "_" + dir : ""}`,
+        `${(type === "ATIS" ? "VATATIS" : type).toUpperCase()} ${icao}${type === "ATIS" && service !== "sayintentions" ? "_" + dir : ""}`,
         "inforeq"
       );
       if (!response.ok) return [false, []];
@@ -770,6 +770,11 @@ ${content}`,
   var deleteMessage = (bus, id) => {
     bus.getPublisher().pub(`acars_del_msg`, id, true, false);
   };
+  var correctNetwork = {
+    hopppie: "hoppie",
+    "batc": "beyondatc",
+    "sayi.ai": "sayintentions"
+  };
   var initClient = (callsign, publisher) => {
     acars.client = createClient(
       GetStoredData("cx_plus_hoppie_code"),
@@ -784,7 +789,7 @@ ${content}`,
           publisher.pub("pcas_activate", message.cpdlc ? "cpdlc-msg" : "acars-msg", true, false);
         }
       },
-      GetStoredData("cx_network_setting") ? GetStoredData("cx_network_setting").toLowerCase() : "hoppie"
+      GetStoredData("cx_network_setting") ? correctNetwork[GetStoredData("cx_network_setting").toLowerCase()] : "hoppie"
     );
     acars.client._stationCallback = (opt) => {
       publisher.pub("acars_station_status", opt, true, false);

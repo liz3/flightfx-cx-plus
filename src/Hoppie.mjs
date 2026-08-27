@@ -237,7 +237,7 @@ export const convertUnixToHHMM = (unixTimestamp) => {
 
 const SERVICES = {
   hoppie: "https://www.hoppie.nl/acars/system/connect.html",
-  "sayi.ai": "https://acars.sayintentions.ai/acars/system/connect.html",
+  sayintentions: "https://acars.sayintentions.ai/acars/system/connect.html",
   beyondatc: "http://localhost:57698/connect.html",
 };
 
@@ -340,7 +340,7 @@ export const createClient = (
      const response = await sendAcarsMessage(
        state,
        state.callsign,
-       `${(type === "ATIS" ? "VATATIS" : type).toUpperCase()} ${icao}${type === "ATIS" ? "_" + dir : ""}`,
+       `${(type === "ATIS" ? "VATATIS" : type).toUpperCase()} ${icao}${type === "ATIS" && service !== "sayintentions" ? "_" + dir : ""}`,
        "inforeq",
      );
      if (!response.ok) return [false, []];

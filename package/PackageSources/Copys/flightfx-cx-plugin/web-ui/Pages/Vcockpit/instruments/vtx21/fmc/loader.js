@@ -25,7 +25,7 @@
                    [this.departureLink, this.holdLink],
                    ['<POS INIT', 'TUNE>'],
                    [this.posInitLink, this.tuneLink],
-                   ['', ''],
+                   ['', this.settingsLink],
                    ['', '']
                   ],
                   /*[

@@ -22,6 +22,7 @@ class AcarsSettingsPage extends WT21FmcPage {
       "/datalink-extra/index",
     );
     this.hoppieId = Subject.create(GetStoredData("cx_plus_hoppie_code"));
+    this.showLogon = Subject.create(0);
     this.winwingSetting = Subject.create(
       GetStoredData("cx_plus_winwing") === "false" ? 1 : 0,
     );
@@ -29,6 +30,10 @@ class AcarsSettingsPage extends WT21FmcPage {
       optionStrings: ["ENABLE", "DISABLE"],
       activeStyle: "green",
     }).bind(this.winwingSetting);
+    this.showLogonSwitch = new SwitchLabel(this, {
+      optionStrings: ["NO", "YES"],
+      activeStyle: "green",
+    }).bind(this.showLogon);
     this.winwingSetting.sub((v) => {
       SetStoredData("cx_plus_winwing", v === 0 ? "true" : "false");
       this.bus.getPublisher().pub("winwing_setting", v === 0, true, false);
@@ -54,8 +59,8 @@ class AcarsSettingsPage extends WT21FmcPage {
         formatter: {
           nullValueString: "-----",
           maxLength: 20,
-          format(value) {
-            return value ? `${value}[blue]` : this.nullValueString;
+          format: (value) => {
+            return value ? `${this.showLogon.get() ? value : "X".repeat(value.length)}[blue]` : this.nullValueString;
           },
           async parse(input) {
             return input;
@@ -63,6 +68,7 @@ class AcarsSettingsPage extends WT21FmcPage {
         },
         onModified: (scratchpadContents) => {
           return new Promise((resolve) => {
+            const currentVis = this.showLogon.get();
             const id = `${Date.now()}--hoppie-input`;
             const input = document.createElement("input");
             input.style.display = "absolute";
@@ -70,6 +76,7 @@ class AcarsSettingsPage extends WT21FmcPage {
             input.addEventListener("input", (event) => {
               const v = event.target.value;
               SetStoredData("cx_plus_hoppie_code", v);
+              this.showLogon.set(currentVis);
               this.hoppieId.set(v);
               this.bus.getPublisher().pub("hoppie_code", v);
               s = true;
@@ -80,6 +87,7 @@ class AcarsSettingsPage extends WT21FmcPage {
             });
             input.addEventListener("blur", (event) => {
               if (s) return;
+              this.showLogon.set(currentVis);
               this.hoppieId.set("");
               event.target.blur();
               event.target.remove();
@@ -89,6 +97,7 @@ class AcarsSettingsPage extends WT21FmcPage {
             document.body.appendChild(input);
             input.focus();
             Coherent.trigger("FOCUS_INPUT_FIELD", id, "", "", "", false);
+            this.showLogon.set(1);
             this.hoppieId.set("PASTE NOW");
           });
         },
@@ -110,8 +119,8 @@ class AcarsSettingsPage extends WT21FmcPage {
         ["", "1/1[page-number-text]", "ACARS SETTINGS"],
         [" LOGON", ""],
         [this.hoppieField, ""],
-        ["WINWING CDU", ""],
-        [this.winwingSwitch, ""],
+        ["WINWING CDU", "SHOW LOGON"],
+        [this.winwingSwitch, this.showLogonSwitch],
         ["", "NETWORK"],
         ["", this.networkSwitch],
         [this.backLink, ""],

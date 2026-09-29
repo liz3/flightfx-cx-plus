@@ -364,6 +364,7 @@ export const createClient = (
      const [success, list] = await state.atisRequestDirect(icao, type, dir);
      if(success)
      for (const message of list) {
+       message._id = state.idc++;
        state._callback(
          message
        );

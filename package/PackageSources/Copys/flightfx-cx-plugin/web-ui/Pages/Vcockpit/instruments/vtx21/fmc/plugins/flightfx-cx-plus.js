@@ -617,6 +617,7 @@
       const [success, list] = await state.atisRequestDirect(icao, type, dir);
       if (success)
         for (const message of list) {
+          message._id = state.idc++;
           state._callback(
             message
           );
@@ -1229,7 +1230,8 @@ ${content}`,
         for (let i = 0; i < current.length; i += 1) {
           current[i] = current[i].filter((e) => e.message._id !== idv);
         }
-        this.messages.set(current);
+        const lis = current.filter((e) => e.length > 0);
+        this.messages.set(lis.length ? lis : [[]]);
         this.invalidate();
       });
       fetchAcarsMessages(this.bus, "send").then((messages) => {
@@ -1284,7 +1286,9 @@ ${content}`,
         for (let i = 0; i < current.length; i += 1) {
           current[i] = current[i].filter((e) => e.message._id !== idv);
         }
-        this.messages.set(current);
+        const lis = current.filter((e) => e.length > 0);
+        console.log(lis);
+        this.messages.set(lis.length ? lis : [[]]);
         this.invalidate();
       });
       this.bus.getSubscriber().on("acars_incoming_message").handle((message) => {
